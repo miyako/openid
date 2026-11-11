@@ -8,7 +8,9 @@ import platform
 import re
 import stat
 import subprocess
+import sys
 import tarfile
+import time
 import urllib.request
 import uuid
 import zipfile
@@ -186,9 +188,18 @@ def receipt_check(path, binary, expected_hash, key="darwin_universal"):
 def signature_check(binary, team=None):
     if platform.system() != "Darwin":
         raise ValueError("Apple signature verification requires macOS")
-    subprocess.run(["codesign", "--verify", "--strict", "--all-architectures",
-                    "--check-notarization", "--test-requirement", "=notarized", str(binary)],
-                   check=True, capture_output=False, timeout=120)
+    for attempt in range(4):
+        try:
+            subprocess.run(["codesign", "--verify", "--strict", "--all-architectures", "--verbose=4",
+                            "--check-notarization", "--test-requirement", "=notarized", str(binary)],
+                           check=True, capture_output=False, timeout=120)
+            break
+        except subprocess.CalledProcessError as error:
+            if error.returncode != 3 or attempt == 3:
+                raise
+            print("Apple notarization requirement not satisfied; retrying in 15 seconds "
+                  f"(attempt {attempt + 2}/4)", file=sys.stderr)
+            time.sleep(15)
     subprocess.run(["lipo", str(binary), "-verify_arch", "x86_64", "arm64"],
                    check=True, capture_output=True, timeout=20)
     teams = set()

@@ -98,6 +98,13 @@ both architectures and online notarization checks **before execution**. Native
 component and CLI versions are independent. Windows x64 is explicitly unsigned
 and tested natively, not presented as publisher-authenticated.
 
+The Apple notarized-requirement check retries only requirement-failure exit3,
+at most four identical strict checks with 15-second pauses. This follows the
+upstream signing workflow's bounded retry approach; it does not classify the
+failure as transient or accept a receipt/plain signature in place of a passing
+online requirement. Other exit codes and timeouts fail immediately. OS
+signature diagnostics are visible; credential-bearing CLI output is not.
+
 Each same-commit manifest binds adapter inputs, pin, licenses, archive digest and
 binary bytes. Assembly copies the universal binary unchanged; it never
 reassembles/re-signs its slices. Actions strips modes, so assembly restores the

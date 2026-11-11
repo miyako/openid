@@ -262,6 +262,34 @@ class ExternalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "signed upstream bytes"):
             cli.verify_binary(self.root, self.binary, "macos-arm64")
 
+    def test_notarization_requirement_retry_is_bounded_and_fail_closed(self):
+        display = ("Authority=Developer ID Application: Example\nTeamIdentifier=ABCDEFGHIJ\n"
+                   "Timestamp=Nov 11, 2026\nCodeDirectory v=20500 flags=0x10000(runtime)\n")
+        requirement_failure = subprocess.CalledProcessError(3, ["codesign"])
+        passed = subprocess.CompletedProcess([], 0, "", display)
+        with patch.object(cli.platform, "system", return_value="Darwin"), \
+                patch.object(cli.time, "sleep") as sleep, \
+                patch.object(cli.subprocess, "run", side_effect=[requirement_failure, *([passed] * 4)]) as run:
+            cli.signature_check(self.binary, "ABCDEFGHIJ")
+            sleep.assert_called_once_with(15)
+            self.assertEqual(sum("--check-notarization" in call.args[0]
+                                 for call in run.call_args_list), 2)
+        with patch.object(cli.platform, "system", return_value="Darwin"), \
+                patch.object(cli.time, "sleep") as sleep, \
+                patch.object(cli.subprocess, "run", side_effect=requirement_failure) as run:
+            with self.assertRaises(subprocess.CalledProcessError):
+                cli.signature_check(self.binary, "ABCDEFGHIJ")
+            self.assertEqual(run.call_count, 4)
+            self.assertEqual(sleep.call_count, 3)
+            self.assertTrue(all(call.args == (15,) for call in sleep.call_args_list))
+        with patch.object(cli.platform, "system", return_value="Darwin"), \
+                patch.object(cli.time, "sleep") as sleep, \
+                patch.object(cli.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["codesign"])) as run:
+            with self.assertRaises(subprocess.CalledProcessError):
+                cli.signature_check(self.binary, "ABCDEFGHIJ")
+            self.assertEqual(run.call_count, 1)
+            sleep.assert_not_called()
+
     def test_publication_checks_embedded_bytes_and_mode_not_only_evidence(self):
         prefix = "openid.4dbase/Resources/"
         entries = [(prefix + "bin/macOS/oidc-cli", b"mac", 0o755),
