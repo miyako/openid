@@ -137,7 +137,8 @@ def include_project(relative):
 def package(root=ROOT, *, repository=None, tag=None, language=None, development=False):
     root = Path(root).resolve()
     repository = repository if repository is not None else os.environ.get("GITHUB_REPOSITORY")
-    tag = tag if tag is not None else os.environ.get("GITHUB_REF_NAME")
+    if tag is None and not development:
+        tag = os.environ.get("GITHUB_REF_NAME")
     if not repository or (not tag and not development):
         raise ValueError("actual owner/repository and release tag are required")
     config = load_config(root, initialized=True, repository=repository, tag=None if development else tag)
@@ -275,7 +276,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--repository", help="actual owner/name; defaults to GITHUB_REPOSITORY")
-    parser.add_argument("--tag", help="prefix-free SemVer release tag, e.g. 0.1.0; defaults to GITHUB_REF_NAME")
+    parser.add_argument("--tag", help="prefix-free SemVer tag, e.g. 0.1.0; release packaging defaults to GITHUB_REF_NAME")
     parser.add_argument("--language", choices=("go", "rust", "cpp"))
     parser.add_argument("--development", action="store_true",
                         help="approved macOS-only dev CLI, nonrelease ZIP under build/development; no pin bypass for releases")

@@ -154,7 +154,10 @@ python3 scripts/package_component.py --root . --repository miyako/openid --devel
 ```
 
 This emits `build/development/openid.development.zip` and restores
-`build/release-test/openid.4dbase`. It requires the exact approved development
+`build/release-test/openid.4dbase`. Development packaging ignores
+`GITHUB_REF_NAME`; an explicitly supplied `--tag` must still equal the configured
+component version. Production packaging retains its release-tag environment
+fallback and version validation. It requires the exact approved development
 archive, receipt, signed executable/hash/mode and online signature verification.
 It retains the original compiler input/output provenance gate, source-stripped
 `.4DZ`, native libraries, explicit ZIP directories and executable modes.

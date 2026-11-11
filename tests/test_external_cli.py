@@ -2,6 +2,7 @@
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import stat
@@ -308,11 +309,24 @@ class ExternalTests(unittest.TestCase):
         mac.chmod(0o755)
         fixture.write_config()
         fixture.write_status()
-        with patch.object(cli, "dev_verify", return_value=mac), \
-                patch.object(cli, "signature_check") as signature:
-            archive = package_component.package(
-                fixture.root, repository="owner/example-component", development=True)
-            signature.assert_called_once_with(mac)
+        archive = None
+        for ref in ("feature/oidc-wrapper", "1/merge", "9.9.9"):
+            with self.subTest(ref=ref), patch.dict(os.environ, {"GITHUB_REF_NAME": ref}), \
+                    patch.object(cli, "dev_verify", return_value=mac), \
+                    patch.object(cli, "signature_check") as signature:
+                archive = package_component.package(
+                    fixture.root, repository="owner/example-component", development=True)
+                signature.assert_called_once_with(mac)
+        with patch.dict(os.environ, {"GITHUB_REF_NAME": "feature/oidc-wrapper"}), \
+                patch.object(cli, "dev_verify", return_value=mac), \
+                patch.object(cli, "signature_check"):
+            with self.assertRaisesRegex(ValueError, "development component tag"):
+                package_component.package(
+                    fixture.root, repository="owner/example-component", tag="9.9.9", development=True)
+            package_component.package(
+                fixture.root, repository="owner/example-component",
+                tag=fixture.config["version"], development=True)
+        self.assertIsNotNone(archive)
         self.assertEqual(archive.parent, fixture.root / "build/development")
         self.assertFalse((fixture.root / "dist/example-component.zip").exists())
         with zipfile.ZipFile(archive) as packed:
