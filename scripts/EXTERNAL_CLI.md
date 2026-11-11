@@ -28,17 +28,23 @@ returning a Task with `done`, `result()`, `cancel()`, `dispose()` and
 belongs only to the per-attempt `CALL WORKER`. Generic `_Process` argument
 round-trip checks remain independent of OIDC identity decoding.
 
-## Production is blocked
+## Production is blocked only on redistribution permission/notices
 
-`scripts/oidc-cli-pin.json` is intentionally **unresolved**. Neither unsigned
-`v0.1.0` nor `v0.1.0-rc.2` is approved. A release must have a reviewed exact
+`scripts/oidc-cli-pin.json` records exact **v0.1.1** asset metadata but remains
+**unresolved** because the owner has not supplied redistribution permission
+or the complete notices. Its archives, Developer ID, hardened runtime, timestamp,
+both slices, online notarization and native `version` have passed independent
+verification. The signed-published-release blocker is resolved; it must not be
+reported as still missing. See [v0.1.1 evidence](../docs/acceptance.md#published-v011-asset-review).
+Neither unsigned `v0.1.0` nor `v0.1.0-rc.2` is approved. A release must have a reviewed exact
 `miyako/oidc-cli` tag/version, universal macOS and unsigned Windows x64 archive
 names, archive and executable SHA256 values, `APPLE_NOTARIZATION.json` SHA256,
 expected Developer ID team and redistribution licenses. At inspection the
 upstream repository did not provide a root redistribution license; permission
 must be resolved rather than inferred from public availability.
 
-The future `release` object has this shape (placeholders are deliberately invalid):
+The `release` object must include the following reviewed license records before
+its status can become `reviewed` (placeholders below are deliberately invalid):
 
 ```json
 {

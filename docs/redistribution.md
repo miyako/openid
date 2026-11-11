@@ -4,13 +4,15 @@ The wrapper's root MIT license covers the component/template-derived code.
 It does **not** license `oidc-cli` or automatically grant permission to
 redistribute an executable merely because its GitHub repository is public.
 
-At upstream commit `27dd05ce90c0ecf0487a99d0e030e9d3a89ef37d`, no root
-LICENSE/NOTICE/COPYRIGHT file was found. The user/upstream maintainer must select
+At both development commit `27dd05ce90c0ecf0487a99d0e030e9d3a89ef37d` and
+published `v0.1.1` commit `1c909c00e6aa4924c4755e325f8ba8bb25927b31`, no root
+LICENSE/NOTICE/COPYRIGHT or README redistribution grant was found. The user/upstream maintainer must select
 and publish the CLI's redistribution license separately. This wrapper does not
 choose or add that license on their behalf. Production acquisition requires
 reviewed upstream, dependency and runtime notice files and their SHA256 pins.
-Until permission and those files are reviewed, release remains blocked even
-after a signed published binary becomes available.
+Until permission and those files are reviewed, acquisition/bundling remains
+blocked. A signed published binary is now available and verified (`v0.1.1`);
+signing is no longer the blocker.
 
 Inventory from that commit's exact `go.mod` (not a claim of completed legal
 review of a future binary):

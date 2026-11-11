@@ -103,6 +103,12 @@ class ExternalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "license digest"):
             cli.load_pin(self.root)
 
+    def test_signed_asset_metadata_does_not_replace_redistribution_permission(self):
+        self.release["licenses"] = []
+        self.write_pin()
+        with self.assertRaisesRegex(ValueError, "redistribution licenses required"):
+            cli.load_pin(self.root)
+
     def test_bad_repo_latest_tag_unsigned_versions_and_development_pin_rejected(self):
         cases = [
             ("repository", "evil/oidc-cli"), ("status", "unresolved")]

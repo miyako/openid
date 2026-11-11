@@ -1,10 +1,11 @@
 # Acceptance scope
 
-Production packaging is blocked until a reviewed published **signed/notarized**
-CLI release can be pinned with exact tag, platform archive hashes and receipt.
-Published `v0.1.0` and `v0.1.0-rc.2` precede that support.
-The public upstream currently lacks a root redistribution license; permission
-and complete dependency/runtime notices are a separate required release review.
+Published **v0.1.1** now satisfies the signed/notarized asset checks, and exact
+tag/archive/binary/receipt metadata is recorded. Production acquisition and
+packaging remain blocked **only on upstream redistribution permission and
+complete notices**. Published `v0.1.0` and `v0.1.0-rc.2` precede signing support.
+The public upstream still lacks a root redistribution license; none has been
+chosen on the owner's behalf.
 
 For explicitly approved development checks only, upstream nonpublishing
 [run 43041282015](https://github.com/miyako/oidc-cli/actions/runs/43041282015)
@@ -92,3 +93,30 @@ browser/MFA is pending, cancellation, form unload/disposal and host shutdown.
 Repeat on native Intel macOS and Windows x64; do not infer those results from
 the ARM64 headless run. No normal desktop installation/activation is authorized
 or performed by these instructions.
+
+## Published v0.1.1 asset review
+
+The user-requested release
+[`v0.1.1`](https://github.com/miyako/oidc-cli/releases/tag/v0.1.1) points to
+source commit `1c909c00e6aa4924c4755e325f8ba8bb25927b31`. All four archives and
+the receipt passed `SHA256SUMS`; the selected universal/Windows archive and
+receipt SHA256 values also match the release API digests. Extraction rejected
+anything except each exact root regular executable.
+
+The universal executable independently passed Developer ID verification for
+team `Y69CWUC25B`, hardened runtime, timestamp, both Mach-O architecture
+signatures and online notarization. The receipt is `Accepted`, submission
+`7a9552e3-aa5d-419d-bb9f-b2c579d1f0f6`, and binds that exact executable hash.
+Only after verification, native ARM64 `version` returned protocol1, `ok:true`,
+version `0.1.1`. The executable was not re-signed, reassembled or dequarantined.
+Windows archive/hash/shape were inspected; Windows execution and Authenticode
+signing are not claimed.
+
+Exact selected archive/binary/receipt hashes are recorded in
+[`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json).
+Its status deliberately remains `unresolved` solely because redistribution
+permission/notices have not been supplied. It cannot download or bundle this
+candidate through the production path, even if its metadata is complete.
+The component's earlier full source/compiled development-host acceptance used
+the separately approved CI artifact, not this new release; those scopes must
+not be conflated.

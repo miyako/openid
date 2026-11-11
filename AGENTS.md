@@ -21,7 +21,8 @@ deliberate external pinned-asset adapter.** Do not run initialize/rename again.
 - Preserve notarized Developer ID CLI bytes and mode. Never lipo, re-sign or
   remove quarantine from the external macOS executable. No unsigned fallback.
   Windows x64 has no configured Authenticode signing; do not claim otherwise.
-- A production pin remains unresolved until a signed published release exists.
+- Published v0.1.1 signing/integrity is verified and exact pin metadata recorded;
+  production acquisition remains blocked pending redistribution permission/notices.
   Approved CI-artifact development acceptance is separate, never release eligible.
 - No local secret access, Keychain operations or uploads. The user owns setup.
   No tag, release, merge, activation or global installation without authorization.

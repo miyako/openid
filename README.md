@@ -6,12 +6,12 @@ Namespace **OpenID**, public classes **Client** and **Task**. No NetKit, native
 4D plug-in, embedded OIDC implementation, client secret, token cache, refresh
 persistence or provider logout.
 
-**Development candidate, not release-ready.** A reviewed signed/notarized
-published CLI release pin is required before distribution. Existing unsigned
-`v0.1.0` / `v0.1.0-rc.2` assets are not acceptable substitutes. No runtime
+**Development candidate, not release-ready.** Published CLI **v0.1.1** now
+passes archive, Developer ID, notarization and native-version verification;
+its exact pin metadata is recorded. Acquisition/bundling remains disabled
+solely pending upstream [redistribution permission/notices](docs/redistribution.md).
+Existing unsigned `v0.1.0` / `v0.1.0-rc.2` assets remain unacceptable. No runtime
 download, PATH lookup, quarantine removal or unsigned fallback is performed.
-Upstream [redistribution licensing/notices](docs/redistribution.md) also require
-review before release.
 
 ## Desktop API
 
