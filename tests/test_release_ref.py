@@ -142,8 +142,10 @@ class ReleaseRefTests(unittest.TestCase):
 
     def test_existing_configuration_validator_checks_version(self):
         config = ci_config.load_config(ROOT)
-        with self.assertRaisesRegex(ValueError, "pin unresolved"):
-            ci_config.load_config(ROOT, tag=config["version"])
+        with patch("external_cli.load_pin", side_effect=ValueError("fixture pin unresolved")) as load_pin:
+            with self.assertRaisesRegex(ValueError, "pin unresolved"):
+                ci_config.load_config(ROOT, tag=config["version"])
+            load_pin.assert_called_once_with(ROOT)
         for tag in ("v" + config["version"], "999999.0.0", "20R3.2"):
             with self.subTest(tag=tag), self.assertRaisesRegex(ValueError, "template.json version"):
                 ci_config.load_config(ROOT, tag=tag)

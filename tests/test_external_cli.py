@@ -39,8 +39,9 @@ class ExternalTests(unittest.TestCase):
                                 "sha256": "d" * 64, "binary_sha256": "e" * 64}},
             "licenses": [],
         }
-        for kind in ("upstream", "dependencies", "runtime"):
-            path = self.root / ("scripts/licenses/" + kind + ".txt")
+        for kind, name in (("upstream", "upstream"), ("dependencies", "dependencies"),
+                           ("runtime", "runtime"), ("upstream", "release-grant")):
+            path = self.root / ("scripts/licenses/" + name + ".txt")
             path.write_text("Synthetic license fixture, not redistribution evidence\n")
             self.release["licenses"].append({
                 "kind": kind, "path": str(path.relative_to(self.root)), "sha256": cli.digest(path)})
@@ -64,9 +65,11 @@ class ExternalTests(unittest.TestCase):
         return archive
 
     def test_unresolved_production_pin_never_downloads_or_executes(self):
+        self.pin["status"] = "unresolved"
+        self.write_pin()
         with patch.object(cli, "fetch") as fetch, patch.object(cli.subprocess, "run") as run:
             with self.assertRaisesRegex(ValueError, "unresolved"):
-                cli.acquire(ROOT, "macos-arm64")
+                cli.acquire(self.root, "macos-arm64")
             fetch.assert_not_called()
             run.assert_not_called()
 
@@ -107,6 +110,20 @@ class ExternalTests(unittest.TestCase):
         self.release["licenses"] = []
         self.write_pin()
         with self.assertRaisesRegex(ValueError, "redistribution licenses required"):
+            cli.load_pin(self.root)
+
+    def test_every_notice_kind_and_separate_release_grant_are_checked(self):
+        notices = self.release["licenses"]
+        for kind in ("upstream", "dependencies", "runtime"):
+            self.release["licenses"] = [notice for notice in notices if notice["kind"] != kind]
+            self.write_pin()
+            with self.subTest(kind=kind), self.assertRaisesRegex(ValueError, "redistribution licenses required"):
+                cli.load_pin(self.root)
+        self.release["licenses"] = notices
+        self.write_pin()
+        self.assertEqual(cli.load_pin(self.root), self.release)
+        (self.root / notices[-1]["path"]).write_text("changed release grant")
+        with self.assertRaisesRegex(ValueError, "license digest"):
             cli.load_pin(self.root)
 
     def test_bad_repo_latest_tag_unsigned_versions_and_development_pin_rejected(self):
@@ -266,6 +283,14 @@ class ExternalTests(unittest.TestCase):
         for data, mode in ((b"resigned", 0o755), (b"mac", 0o644)):
             pack([(entries[0][0], data, mode), *entries[1:]])
             with self.subTest(data=data, mode=mode), self.assertRaises(ValueError):
+                cli.verify_bundle(self.root, archive, "openid")
+        for notice in entries[2:]:
+            pack([entry for entry in entries if entry[0] != notice[0]])
+            with self.subTest(missing=notice[0]), self.assertRaisesRegex(ValueError, "license missing"):
+                cli.verify_bundle(self.root, archive, "openid")
+            pack([(name, b"changed" if name == notice[0] else data, mode)
+                  for name, data, mode in entries])
+            with self.subTest(changed=notice[0]), self.assertRaises(ValueError):
                 cli.verify_bundle(self.root, archive, "openid")
 
     def test_outer_signer_never_includes_external_cli(self):

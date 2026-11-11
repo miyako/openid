@@ -1,11 +1,12 @@
 # Acceptance scope
 
 Published **v0.1.1** now satisfies the signed/notarized asset checks, and exact
-tag/archive/binary/receipt metadata is recorded. Production acquisition and
-packaging remain blocked **only on upstream redistribution permission and
-complete notices**. Published `v0.1.0` and `v0.1.0-rc.2` precede signing support.
-The public upstream still lacks a root redistribution license; none has been
-chosen on the owner's behalf.
+tag/archive/binary/receipt metadata is recorded. The owner explicitly authorized
+MIT licensing covering the existing release. The immutable grant and complete
+dependency/runtime notices are now pinned; production dependency acquisition
+is enabled. Published `v0.1.0` and `v0.1.0-rc.2` precede signing support and remain
+unacceptable. This resolves the dependency/permission gates, not the remaining
+outer distribution signing or unexecuted platform/provider acceptance.
 
 For explicitly approved development checks only, upstream nonpublishing
 [run 43041282015](https://github.com/miyako/oidc-cli/actions/runs/43041282015)
@@ -114,9 +115,10 @@ signing are not claimed.
 
 Exact selected archive/binary/receipt hashes are recorded in
 [`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json).
-Its status deliberately remains `unresolved` solely because redistribution
-permission/notices have not been supplied. It cannot download or bundle this
-candidate through the production path, even if its metadata is complete.
+Its status is now `reviewed`, with MIT license/grant and all required notices
+from licensing commit `847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc` pinned
+separately from the older binary/source release. See
+[redistribution provenance](redistribution.md).
 The component's earlier full source/compiled development-host acceptance used
 the separately approved CI artifact, not this new release; those scopes must
 not be conflated.

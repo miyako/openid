@@ -16,7 +16,8 @@ steps or dispatch any hosted workflow/publication. The existing checksum pin in
 `package.json.tool` and downloader/compiler hooks remain intact.
 CI's optional tool4d/host stages require **manual workflow_dispatch** plus
 `FOURD_ENABLED=true`; ordinary push/PR runs cannot download tool4d. Publish
-remains manual and cannot get past the unresolved external release pin.
+remains manual and requires the reviewed external pin, real host evidence and
+the mandatory outer signing/notarization gates.
 This scaffold does not manufacture source/compiled-host evidence.
 
 Host acceptance uses the same registry in source and compiled mode. Its version
@@ -28,23 +29,29 @@ returning a Task with `done`, `result()`, `cancel()`, `dispose()` and
 belongs only to the per-attempt `CALL WORKER`. Generic `_Process` argument
 round-trip checks remain independent of OIDC identity decoding.
 
-## Production is blocked only on redistribution permission/notices
+## Reviewed production dependency
 
-`scripts/oidc-cli-pin.json` records exact **v0.1.1** asset metadata but remains
-**unresolved** because the owner has not supplied redistribution permission
-or the complete notices. Its archives, Developer ID, hardened runtime, timestamp,
+`scripts/oidc-cli-pin.json` enables exact **v0.1.1** asset acquisition with
+`status:reviewed`. Its archives, Developer ID, hardened runtime, timestamp,
 both slices, online notarization and native `version` have passed independent
-verification. The signed-published-release blocker is resolved; it must not be
-reported as still missing. See [v0.1.1 evidence](../docs/acceptance.md#published-v011-asset-review).
+verification. The owner authorized MIT licensing, explicitly covering the
+existing release source and binaries, at separate licensing commit
+`847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc`. All five upstream licensing
+documents plus the Go baseline notice are vendored byte-for-byte, hash-pinned
+and required in the assembled/packaged component. The combined notice bundle
+covers both dependencies and the Go runtime, including PATENTS and embedded
+third-party licenses. See [redistribution provenance](../docs/redistribution.md)
+and [v0.1.1 evidence](../docs/acceptance.md#published-v011-asset-review).
 Neither unsigned `v0.1.0` nor `v0.1.0-rc.2` is approved. A release must have a reviewed exact
 `miyako/oidc-cli` tag/version, universal macOS and unsigned Windows x64 archive
 names, archive and executable SHA256 values, `APPLE_NOTARIZATION.json` SHA256,
-expected Developer ID team and redistribution licenses. At inspection the
-upstream repository did not provide a root redistribution license; permission
-must be resolved rather than inferred from public availability.
+expected Developer ID team and redistribution licenses. Permission comes from
+the explicitly published owner grant, not public repository visibility.
 
-The `release` object must include the following reviewed license records before
-its status can become `reviewed` (placeholders below are deliberately invalid):
+The `release` object includes reviewed license records of all three kinds
+(placeholders in this schema example are deliberately invalid). Multiple
+`upstream` records preserve both the standard MIT text and existing-release
+grant; the actual pin also retains the notice manifest and scope documentation.
 
 ```json
 {
@@ -170,6 +177,7 @@ It retains the original compiler input/output provenance gate, source-stripped
 Changed/staged resources require recompilation; no marker is rewritten.
 The package is macOS-only, excludes Windows executables, contains a conspicuous
 `DEVELOPMENT_ONLY.json` with `release_eligible:false`, and does not enter `dist/`
-or emit release acceptance/provenance. Missing upstream redistribution licenses
-remain explicitly unresolved. This exception is not available in CI/Publish
-entry points and does not alter production pin, packaging or publication gates.
+or emit release acceptance/provenance. This historical CI artifact remains
+nonrelease; approval of the separately published v0.1.1 pin does not promote it.
+This exception is not available in CI/Publish entry points and does not alter
+production pin, packaging or publication gates.

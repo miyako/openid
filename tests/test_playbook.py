@@ -73,7 +73,7 @@ class PlaybookTests(unittest.TestCase):
                 self.assertIn("external-oidc-cli-v1", text)
                 self.assertIn("scripts/external_cli.py", text)
         guide = (ROOT / "scripts/EXTERNAL_CLI.md").read_text()
-        for phrase in ("external-oidc-cli-v1", "Production is blocked", "release_eligible:false",
+        for phrase in ("external-oidc-cli-v1", "Reviewed production dependency", "release_eligible:false",
                        "before", "source/compiled", "never placed"):
             self.assertIn(phrase, guide)
 
