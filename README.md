@@ -13,6 +13,10 @@ complete [redistribution notices](docs/redistribution.md) are pinned and bundled
 Existing unsigned `v0.1.0` / `v0.1.0-rc.2` assets remain unacceptable. No runtime
 download, PATH lookup, quarantine removal or unsigned fallback is performed.
 
+The MIT dependency-permission gate is resolved. Independent fresh Intel CI
+still rejects Apple's online `notarized` requirement, so resource assembly and
+final v0.1.1 package acceptance remain blocked; see [acceptance](docs/acceptance.md).
+
 ## Desktop API
 
 Set application-controlled trust configuration, not an issuer supplied by an
@@ -103,6 +107,8 @@ upstream [protocol](https://github.com/miyako/oidc-cli/blob/main/docs/protocol.m
 Local macOS ARM64 tool4d 20.7/101905 executed the source and unpacked compiled
 development component, including real async version, active cancellation,
 CLI timeout, owner exit and zero leaked workers. Both compiler targets passed.
-This uses the approved, independently verified signed/notarized **CI artifact**,
-not a published release pin. It does not establish Intel/Windows 4D execution,
+That earlier full compiled-package run used the approved signed/notarized
+**CI artifact**, not v0.1.1. The source host and both compile targets have since
+passed with the licensed v0.1.1 resources; exact final v0.1.1 package acceptance
+awaits the Intel acquisition gate. These checks do not establish Intel/Windows 4D execution,
 normal IDE UI responsiveness, Auth0/browser/MFA or downloaded-release acceptance.

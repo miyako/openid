@@ -11,6 +11,7 @@ userPreferences.*/
 component/*/Data/
 component/*/Logs/
 component/*/Resources/bin/
+component/*/Resources/licenses/OIDC-CLI-*
 .DS_Store
 .tools/
 .initialize-*/

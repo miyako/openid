@@ -122,3 +122,36 @@ separately from the older binary/source release. See
 The component's earlier full source/compiled development-host acceptance used
 the separately approved CI artifact, not this new release; those scopes must
 not be conflated.
+
+## Licensed v0.1.1 integration and current Intel gate
+
+The MIT grant/notices and reviewed production pin are enabled by component
+commit `f7fe775ef9f56f246043283203f69a892e320044`. Local ARM64 production
+acquisition passed the complete archive/receipt/Developer ID/both-slice/online
+notarization/native-version checks. The real source host executed **v0.1.1**
+with `compiled:false`, `asyncDesktopStatus:"passed"` and zero leaked workers,
+including cancellation, timeout, owner exit and protocol/sanitization cases.
+Both actual 4D compile targets subsequently passed with the staged macOS
+v0.1.1 executable and six notice files. No native Windows/Intel 4D execution
+or final packed v0.1.1 component acceptance is claimed.
+
+At commit `480eb99a4ffa603d07f46d296da2b3022893d545`, the full Python suite
+passed 221 tests with one native-only skip. In
+[CI run 43109110167](https://github.com/miyako/openid/actions/runs/43109110167),
+configuration, ARM64 native acquisition and Windows x64 native acquisition/
+version passed. The independent **fresh Intel macOS** job exhausted four strict
+online notarized-requirement checks with 15-second pauses. Every attempt
+reported `valid on disk` and `satisfies its Designated Requirement`, followed by
+`test-requirement: code failed to satisfy specified code requirement(s)` and
+exit3. Assembly was skipped. Signature integrity and the MIT permission are
+not the failing gates; the cause of the fresh Intel notarized-requirement
+rejection is not established.
+
+Upstream
+[v0.1.1 publishing run 43102918063](https://github.com/miyako/oidc-cli/actions/runs/43102918063)
+previously passed exact extracted universal checks and native Intel `version`
+on its signing/publishing host. That host had just submitted the same binaries
+to Apple; it is not independent cold-Intel acceptance and does not override
+the current failure. Neither retries nor a receipt/plain signature can replace
+a passing online requirement. No unsigned fallback, requirement bypass,
+re-signing, tag replacement, release or merge was performed.
