@@ -244,6 +244,7 @@ class ExternalTests(unittest.TestCase):
             cli.signature_check(self.binary, "ABCDEFGHIJ")
             self.assertIn("--check-notarization", run.call_args_list[0].args[0])
             self.assertIn("=notarized", run.call_args_list[0].args[0])
+            self.assertFalse(run.call_args_list[0].kwargs["capture_output"])
             self.assertEqual(sum("--display" in call.args[0] for call in run.call_args_list), 2)
         for missing in ("Authority=Developer ID Application: Example\n", "Timestamp=Nov 11, 2026\n",
                         "CodeDirectory v=20500 flags=0x10000(runtime)\n"):

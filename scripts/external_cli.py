@@ -188,7 +188,7 @@ def signature_check(binary, team=None):
         raise ValueError("Apple signature verification requires macOS")
     subprocess.run(["codesign", "--verify", "--strict", "--all-architectures",
                     "--check-notarization", "--test-requirement", "=notarized", str(binary)],
-                   check=True, capture_output=True, timeout=120)
+                   check=True, capture_output=False, timeout=120)
     subprocess.run(["lipo", str(binary), "-verify_arch", "x86_64", "arm64"],
                    check=True, capture_output=True, timeout=20)
     teams = set()
