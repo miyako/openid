@@ -24,6 +24,46 @@ bounded and torn down. Windows runs native version/timeout; its POSIX signal
 test is explicitly skipped. These are CLI lifecycle checks, not provider login
 or native Intel/Windows 4D acceptance.
 
+## Executed current universal-policy acceptance
+
+At component commit `131b56ce8a4df7e387062288a4dd36b13981ec15`,
+[CI run 43117236685](https://github.com/miyako/openid/actions/runs/43117236685)
+passed configuration, all three native CLI jobs and universal resource
+assembly. Actual downloaded same-commit manifests contain:
+
+| Target | Signature | Accepted receipt | Online notarization | Native lifecycle |
+| --- | --- | --- | --- | --- |
+| macOS Intel x64 | passed | passed | **not_run**, declared Intel policy | Version, timeout and SIGTERM cancellation passed |
+| macOS ARM64 | passed | passed | passed | Version, timeout and SIGTERM cancellation passed |
+| Windows x64 | not_applicable | not_applicable | not_applicable | Version and timeout passed; POSIX SIGTERM explicitly skipped |
+
+Assembly on ARM64 independently rechecked the identical universal bytes with
+the ARM64 online requirement. That does not relabel Intel's `not_run` tier.
+The local Python suite ran **232 tests: 229 passed, 3 native-only skips** under
+GitHub-style repository/ref variables. Workflow and generated-icon checks pass.
+
+Using approved tool4d **20.7 build 20.101905** on native ARM64, both actual
+compiler targets passed after assembling the three native artifacts and all
+six pinned notice files. Both the real source host and the **exact unpacked
+full universal ZIP** passed the complete contract with native CLI `0.1.1`,
+`asyncDesktopStatus:"passed"` and zero leaked workers; compiled mode was
+respectively false and true. Embedded executable modes, binary/notice digests,
+source stripping and the unpacked CLI's actual ARM64 signature/online check
+were also verified.
+
+The local inspection ZIP SHA256 is
+`364acdb8b6632365a9de1204dd904f802b818ee01d3e0e7eaaff88ca31746ee6`
+(9,356,650 bytes), bound to the commit above. It is not a published release
+or outer-notarized distribution. Adjacent retained inspection evidence marks
+`release_ready:false`; it does not manufacture hosted signing acceptance.
+The native manifests, source/compiler/compiled-host reports and exact archive
+are preserved separately.
+
+Native Intel/Windows **4D** execution, normal desktop UI/Auth0/MFA,
+quarantined/downloaded first launch and the outer Developer ID signed,
+notarized/stapled DMG remain **not run**. No merge, tag, release, quarantine
+removal, Gatekeeper setting change or local signing-secret operation occurred.
+
 Published **v0.1.1** now satisfies the signed/notarized asset checks, and exact
 tag/archive/binary/receipt metadata is recorded. The owner explicitly authorized
 MIT licensing covering the existing release. The immutable grant and complete
@@ -134,8 +174,9 @@ signatures and online notarization. The receipt is `Accepted`, submission
 `7a9552e3-aa5d-419d-bb9f-b2c579d1f0f6`, and binds that exact executable hash.
 Only after verification, native ARM64 `version` returned protocol1, `ok:true`,
 version `0.1.1`. The executable was not re-signed, reassembled or dequarantined.
-Windows archive/hash/shape were inspected; Windows execution and Authenticode
-signing are not claimed.
+This initial asset-only review inspected Windows archive/hash/shape without
+executing it. Current CI results above separately establish native Windows
+CLI version/timeout, not Authenticode signing or native Windows 4D.
 
 Exact selected archive/binary/receipt hashes are recorded in
 [`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json).
@@ -156,8 +197,8 @@ notarization/native-version checks. The real source host executed **v0.1.1**
 with `compiled:false`, `asyncDesktopStatus:"passed"` and zero leaked workers,
 including cancellation, timeout, owner exit and protocol/sanitization cases.
 Both actual 4D compile targets subsequently passed with the staged macOS
-v0.1.1 executable and six notice files. No native Windows/Intel 4D execution
-or final packed v0.1.1 component acceptance is claimed.
+v0.1.1 executable and six notice files. At that point no native Windows/Intel
+4D execution or final packed v0.1.1 component acceptance had been performed.
 
 At commit `480eb99a4ffa603d07f46d296da2b3022893d545`, the full Python suite
 passed 221 tests with one native-only skip. In

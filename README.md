@@ -119,3 +119,8 @@ passed with the licensed v0.1.1 resources. Current universal-policy acceptance
 is recorded separately in [acceptance](docs/acceptance.md); historical package
 evidence must not be relabeled. These checks do not establish Intel/Windows 4D execution,
 normal IDE UI responsiveness, Auth0/browser/MFA or downloaded-release acceptance.
+
+Current three-target CI and assembly pass under the declared policy. The
+exact full universal ZIP also passes the real ARM64 compiled-host lifecycle
+contract; Intel's online notarization status remains **not run by policy**,
+not a successful independent Intel online check.
