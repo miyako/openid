@@ -9,6 +9,8 @@ Read `AGENTS.md`, `README.md`, `template.json`, component class docs and the
 relevant scripts/tests before changes. This destination is already initialized:
 repository/component/project/catalog/package `openid`, namespace `OpenID`,
 external CLI `oidc-cli`. Do not reinitialize or add a native CLI starter.
+Deployment is macOS ARM64 plus Windows x64; Intel macOS and Rosetta are
+unsupported. Use `macOS-arm64`, never the former `macOS-universal` selector.
 
 The separately maintained upstream owns OIDC discovery, browser, PKCE,
 state/nonce, callback, token exchange and validation. This wrapper validates
@@ -43,7 +45,7 @@ signed/notarized/stapled DMG packaging must preserve the CLI signature.
 Missing required evidence fails, never downgrades. Do not dispatch publication,
 merge, tag or access secret values without separate authorization.
 
-Report actual passed/failed/not_run scope. Dual-target compilation is not
-native Intel execution; macOS ARM64 fixtures do not establish Windows 4D,
+Report actual passed/failed/not_run scope. The generic x86_64 compiler target
+is retained for Windows, not Intel macOS support. macOS ARM64 fixtures do not establish Windows 4D,
 interactive Auth0/MFA or Dependency Manager installation. Synthetic identity
 protocol fixtures are not real-provider E2E or transaction-bound 4D Server login.

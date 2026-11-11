@@ -314,6 +314,13 @@ def validate(root=ROOT):
     else:
         command(native_job, "scripts/build_cli.py")
     command(ci["jobs"]["assembly"], "ci_config.py assemble")
+    native_targets = ("macos-arm64", "windows-x64") if external else ("macos-x64", "macos-arm64", "windows-x64")
+    for job in (ci["jobs"]["assembly"], compile_job):
+        downloads = [step["with"] for step in job["steps"]
+                     if step.get("uses") == "actions/download-artifact@v4"]
+        require(downloads == [{"name": "cli-" + target, "path": "build/" + target}
+                              for target in native_targets],
+                "artifact downloads must match the supported native target set")
     for job in (native_job, ci["jobs"]["assembly"]):
         require(job.get("if") == "needs.configuration.outputs.initialized == 'true'",
                 "native/assembly jobs must require initialization")

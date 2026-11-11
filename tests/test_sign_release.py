@@ -29,8 +29,10 @@ IDENTITY = "Developer ID Application: Private Identity (" + TEAM + ")"
 
 
 class FakeTools:
-    def __init__(self, secrets):
+    def __init__(self, secrets, repository="UuidTest", cli="uuid-test"):
         self.secrets = secrets
+        self.component_name = repository + ".4dbase"
+        self.windows_relative = "Resources/bin/Windows/" + cli + ".exe"
         self.calls = []
         self.fail = None
         self.status = "Accepted"
@@ -89,7 +91,7 @@ class FakeTools:
             if action == "--force":
                 path.write_bytes(path.read_bytes() + b"signature")
                 if self.immutable_change and path.suffix != ".dmg":
-                    (path.parents[3] / "Resources/bin/Windows/uuid-test.exe").write_bytes(b"changed")
+                    (path.parents[3] / self.windows_relative).write_bytes(b"changed")
             elif action == "--display":
                 out = ""
                 err = ("Authority=Developer ID Application: Private Identity\n"
@@ -100,19 +102,19 @@ class FakeTools:
         elif args[0] == signing.HDIUTIL:
             if action == "create":
                 self.payload = Path(args[args.index("-srcfolder") + 1])
-                assert [path.name for path in self.payload.iterdir()] == ["UuidTest.4dbase"]
+                assert [path.name for path in self.payload.iterdir()] == [self.component_name]
                 Path(args[-1]).write_bytes(b"synthetic DMG")
             elif action == "attach":
                 self.mount = Path(args[args.index("-mountpoint") + 1])
-                shutil.copytree(self.payload / "UuidTest.4dbase", self.mount / "UuidTest.4dbase")
+                shutil.copytree(self.payload / self.component_name, self.mount / self.component_name)
                 if self.mutate_mount:
-                    (self.mount / "UuidTest.4dbase/Resources/bin/Windows/uuid-test.exe").write_bytes(b"tampered")
+                    (self.mount / self.component_name / self.windows_relative).write_bytes(b"tampered")
                 report = [] if self.malformed_mount else {"system-entities": [{"mount-point": str(self.mount)}]}
                 out = plistlib.dumps(report).decode()
             elif action == "detach":
-                if self.mount is None or not (self.mount / "UuidTest.4dbase").exists():
+                if self.mount is None or not (self.mount / self.component_name).exists():
                     return subprocess.CompletedProcess(args, 1, "", "not mounted")
-                shutil.rmtree(self.mount / "UuidTest.4dbase")
+                shutil.rmtree(self.mount / self.component_name)
         elif args[0] == signing.XCRUN:
             if args[1:3] == ["notarytool", "submit"]:
                 assert kwargs["timeout"] == 1860

@@ -13,6 +13,8 @@ It expressly permits wrapper bundling of the release built from source commit
 `1c909c00e6aa4924c4755e325f8ba8bb25927b31`. Neither the earlier source tag nor its
 binary-only archives contained these supplemental documents; fetch them from
 the licensing commit, not the v0.1.1 tag. No tag or signed asset was replaced.
+The grant covers all listed upstream binaries, but this component selects only
+macOS ARM64 and Windows x64; licensing scope is not an Intel support claim.
 
 ## Exact notices
 

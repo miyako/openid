@@ -34,7 +34,7 @@ Function quote($argument : Text)->$quoted : Text
 	End for
 	$quoted+="\""
 
-Function execute($file : 4D.File; $arguments : Collection)->$result : Object
+Function execute($file : 4D.File; $arguments : Collection; $timeout : Real)->$result : Object
 	var $command; $argument : Text
 	var $value : Variant
 	var $options : Object
@@ -44,6 +44,12 @@ Function execute($file : 4D.File; $arguments : Collection)->$result : Object
 	var $worker : 4D.SystemWorker
 	If (($file=Null) | ($arguments=Null))
 		return New object("ok"; False; "error"; New object("code"; "invalid_argument"; "message"; "Executable File and arguments Collection are required"))
+	End if
+	If (Count parameters<3)
+		$timeout:=30
+	End if
+	If (($timeout<=0) | ($timeout>30))
+		return New object("ok"; False; "error"; New object("code"; "invalid_argument"; "message"; "Process timeout must be greater than zero and at most 30 seconds"))
 	End if
 	$command:=This.quote($file.path)
 	For each ($value; $arguments)
@@ -71,7 +77,7 @@ Function execute($file : 4D.File; $arguments : Collection)->$result : Object
 		End if
 		$command+=" "+This.quote($argument)
 	End for each
-	$options:=New object("dataType"; "text"; "encoding"; "UTF-8"; "hideWindow"; True; "timeout"; 30; "currentDirectory"; $file.parent)
+	$options:=New object("dataType"; "text"; "encoding"; "UTF-8"; "hideWindow"; True; "timeout"; $timeout; "currentDirectory"; $file.parent)
 	$previous:=Method called on error(ek local)
 	CLI_LastErrors:=Null
 	ON ERR CALL("_CaptureError"; ek local)

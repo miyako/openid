@@ -5,7 +5,7 @@ not a native 4D plug-in loader. Features requiring native 4D SDK integration
 belong to the separate host-installed plug-in architecture, not a private
 component backend.
 
-`cs._Process.new().execute(file : 4D.File; arguments : Collection) : Object`
+`cs._Process.new().execute(file : 4D.File; arguments : Collection; timeout : Real) : Object`
 is the generic synchronous process adapter. Arguments must be Text, File or
 Folder. File/Folder values are expanded to physical POSIX paths on macOS or
 platform paths on Windows; NUL is rejected using exact string comparison.
@@ -20,7 +20,9 @@ The executable is a physical POSIX File path as required by SystemWorker.
 Native 4D round-trip tests, not shell tests, are necessary on each platform.
 
 Options: `dataType:"text"`, `encoding:"UTF-8"`, `hideWindow:true`,
-`timeout:30`, `currentDirectory:file.parent`. Input is closed immediately,
+`timeout:30` by default, `currentDirectory:file.parent`. An explicit timeout
+must be greater than zero and at most 30 seconds; the internal macOS
+architecture probe uses one second. Input is closed immediately,
 then `.wait()` completes. The adapter captures `.response` (stdout),
 `.responseError` (stderr), `.exitCode` and `.errors` separately.
 Nonempty stderr does not turn a zero exit code into failure. Missing/undefined
@@ -30,3 +32,6 @@ Creation errors use `_CaptureError` and restore `Method called on error(ek local
 immediately afterward. Diagnostic `Last errors` are returned, not swallowed.
 There is no shared async queue/PID map or global handler. For binary feature
 protocols, add a deliberately separate Blob mode rather than corrupting UTF-8 text.
+
+This helper is synchronous and not a UI API. Client/Task invoke the bounded
+architecture probe only from their dedicated background worker.

@@ -19,8 +19,18 @@ File to a physical path using `File(file.platformPath; fk platform path)`, then
 delegates to `_Process`. There is deliberately no PATH search, permission repair,
 shell, download, copied PDF algorithm or queue.
 
-macOS default/`macOS-universal` uses the two-slice executable. Windows requires
-explicit `Windows-x64`. Unknown selection or OS returns an explicit error;
+macOS default/`macOS-arm64` uses the pinned ARM64-only executable. Intel macOS,
+Rosetta and the former `macOS-universal` selector are explicitly unsupported.
+The resolver checks `/usr/bin/uname -m` using a one-second-bounded SystemWorker;
+only successful exact `arm64` output with no stderr is accepted. Intel/Rosetta,
+failed probes and malformed output fail closed. It does not infer architecture
+from CPU marketing names or missing `System info` fields. If the documented
+`System info.macRosetta` flag is present and true, it also rejects that context.
+Client/Task resolve inside their dedicated worker, never on the calling/UI
+process. Internal synchronous `resolve()`/`execute()` are not UI APIs.
+`supportsMacOS()` is a pure compatibility predicate used by fixtures;
+`resolve()` always runs the actual host probe, never caller-supplied metadata.
+Windows requires explicit `Windows-x64`. Unknown selection or OS returns an explicit error;
 Windows ARM64 native execution is not implemented. See [Client](Client.md)
 for the common result/error shape.
 

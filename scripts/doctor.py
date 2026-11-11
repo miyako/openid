@@ -8,7 +8,7 @@ import shutil
 import os
 import sys
 
-from ci_config import ROOT, load_config, require_tool4d_host, resolve_tool_pin
+from ci_config import ROOT, load_config, require_tool4d_host, resolve_tool_pin, targets
 from build_cli import native_target
 from initialize import github_repository
 
@@ -33,7 +33,9 @@ def doctor(root=ROOT, tool4d=None):
     check("python", sys.version_info >= (3, 10), sys.version.split()[0])
     try:
         report["native_target"] = native_target()
-        check("native_cli_host", True, report["native_target"])
+        supported = report["native_target"] in targets(config)
+        check("native_cli_host", supported, report["native_target"] if supported else
+              "Intel macOS is unsupported by the external profile")
     except ValueError as error:
         check("native_cli_host", False, str(error))
     external = config.get("cli_source") == "external-oidc-cli-v1"
@@ -68,7 +70,8 @@ def doctor(root=ROOT, tool4d=None):
     candidate = Path(tool4d) if tool4d else Path(root) / ".tools/tool4d.app/Contents/MacOS/tool4d"
     check("tool4d", candidate.is_file() and os.access(candidate, os.X_OK), str(candidate))
     if platform.system() == "Darwin":
-        check("lipo", shutil.which("lipo") is not None, "required for universal resource assembly")
+        check("lipo", shutil.which("lipo") is not None,
+              "read-only ARM64 architecture verification" if external else "required for universal resource assembly")
     report["ready_for_local_acceptance"] = all(entry["status"] == "passed" for entry in report["checks"])
     return report
 

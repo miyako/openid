@@ -33,8 +33,9 @@ class ExternalTests(unittest.TestCase):
             "version": "9.0.0", "tag": "v9.0.0", "receipt_sha256": "a" * 64,
             "apple_team_id": "ABCDEFGHIJ",
             "assets": {
-                "macos": {"name": "oidc-cli_9.0.0_darwin_universal.tar.gz",
-                          "sha256": "b" * 64, "binary_sha256": "c" * 64},
+                "macos": {"name": "oidc-cli_9.0.0_darwin_arm64.tar.gz",
+                          "sha256": "b" * 64, "binary_sha256": "c" * 64,
+                          "architectures": ["arm64"]},
                 "windows-x64": {"name": "oidc-cli_9.0.0_windows_amd64.zip",
                                 "sha256": "d" * 64, "binary_sha256": "e" * 64}},
             "licenses": [],
@@ -105,6 +106,96 @@ class ExternalTests(unittest.TestCase):
         (self.root / self.release["licenses"][0]["path"]).write_text("changed")
         with self.assertRaisesRegex(ValueError, "license digest"):
             cli.load_pin(self.root)
+
+    def test_production_pin_is_exact_arm64_with_unchanged_windows_and_notices(self):
+        release = cli.load_pin(ROOT)
+        self.assertEqual(release["assets"]["macos"], {
+            "name": "oidc-cli_0.1.1_darwin_arm64.tar.gz",
+            "sha256": "5465c9c57b9d0b6bf53405066887c4de200a96c4ca27d1f7365b33fb03af306b",
+            "binary_sha256": "42412657b9f3eecb7666c9a466cd4d1d9e83df5820151e88c74418b7999eedca",
+            "architectures": ["arm64"]})
+        self.assertEqual(release["assets"]["windows-x64"], {
+            "name": "oidc-cli_0.1.1_windows_amd64.zip",
+            "sha256": "5733eab84f1d2925d29145d50ee4ac57248fa63a5bfe6eac2834514f5c746c0c",
+            "binary_sha256": "ce57e4c943c9c7e1b3f3ac193d9c4d643a567b6071560ef85ebcfe9a8fb6c448"})
+        self.assertEqual(release["receipt_sha256"],
+                         "717fc3c3040174d3635170d57ea82b1a955c33df482db5402aba744fd1a62b3e")
+        self.assertEqual(release["apple_team_id"], "Y69CWUC25B")
+        self.assertEqual(release["licensing_commit"], "847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc")
+        self.assertEqual(len(release["licenses"]), 6)
+
+    def test_pin_rejects_universal_missing_or_extra_architectures_and_intel_asset(self):
+        asset = self.release["assets"]["macos"]
+        for architectures in (None, [], ["x86_64"], ["arm64", "x86_64"], ["arm64", "arm64"]):
+            asset["architectures"] = architectures
+            self.write_pin()
+            with self.subTest(architectures=architectures), self.assertRaisesRegex(ValueError, "ARM64 only"):
+                cli.load_pin(self.root)
+        asset["architectures"] = ["arm64"]
+        asset["name"] = "oidc-cli_9.0.0_darwin_universal.tar.gz"
+        self.write_pin()
+        with self.assertRaisesRegex(ValueError, "ARM64 macOS"):
+            cli.load_pin(self.root)
+        asset["name"] = "oidc-cli_9.0.0_darwin_arm64.tar.gz"
+        self.release["assets"]["macos-x64"] = dict(asset)
+        self.write_pin()
+        with self.assertRaisesRegex(ValueError, "only macOS ARM64"):
+            cli.load_pin(self.root)
+        with self.assertRaises(ValueError):
+            cli.verify_bundle(self.root, self.root / "unused.zip", "openid")
+
+    def test_intel_and_unknown_targets_rejected_even_when_native(self):
+        import build_cli
+        for target in ("macos-x64", "macos", "linux-arm64"):
+            with self.subTest(target=target), \
+                    patch.object(build_cli, "native_target", return_value=target), \
+                    patch.object(cli, "fetch") as fetch, \
+                    patch.object(cli, "signature_check") as signature, \
+                    patch.object(cli, "version_check") as version:
+                with self.assertRaisesRegex(ValueError, "only macos-arm64"):
+                    cli.acquire(self.root, target)
+                with self.assertRaisesRegex(ValueError, "only macos-arm64"):
+                    cli.verify_binary(self.root, self.binary, target)
+                fetch.assert_not_called()
+                signature.assert_not_called()
+                version.assert_not_called()
+
+    def test_acquisition_preserves_bytes_and_checks_native_platform_policy(self):
+        import build_cli
+        for target, key in (("macos-arm64", "macos"), ("windows-x64", "windows-x64")):
+            asset = self.release["assets"][key]
+            asset["binary_sha256"] = cli.digest(self.binary)
+            self.write_pin()
+            def extraction(archive, output, checksum):
+                self.assertEqual(archive.name, asset["name"])
+                self.assertEqual(checksum, asset["sha256"])
+                output.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(self.binary, output)
+                output.chmod(0o755)
+            with self.subTest(target=target), \
+                    patch.object(build_cli, "native_target", return_value=target), \
+                    patch.object(cli, "fetch") as fetch, \
+                    patch.object(cli, "extract", side_effect=extraction), \
+                    patch.object(cli, "receipt_check") as receipt, \
+                    patch.object(cli, "signature_check") as signature, \
+                    patch.object(cli, "version_check") as version, \
+                    patch.object(build_provenance, "record", return_value={}) as record:
+                binary = cli.acquire(self.root, target)
+                self.assertEqual(binary.read_bytes(), self.binary.read_bytes())
+                self.assertEqual(stat.S_IMODE(binary.stat().st_mode), 0o755)
+                version.assert_called_once_with(binary, self.release["version"])
+                record.assert_called_once_with(self.root, target, binary, True, cli.PROFILE)
+                self.assertTrue(json.loads(binary.with_name("build-manifest.json").read_text())[
+                    "external"]["release_eligible"])
+                if key == "macos":
+                    receipt.assert_called_once_with(self.root / "build/external-cli/APPLE_NOTARIZATION.json",
+                                                    binary, self.release["receipt_sha256"])
+                    signature.assert_called_once_with(binary, self.release["apple_team_id"])
+                    self.assertEqual(fetch.call_count, 2)
+                else:
+                    receipt.assert_not_called()
+                    signature.assert_not_called()
+                    self.assertEqual(fetch.call_count, 1)
 
     def test_signed_asset_metadata_does_not_replace_redistribution_permission(self):
         self.release["licenses"] = []
@@ -204,11 +295,12 @@ class ExternalTests(unittest.TestCase):
         path = self.root / "receipt.json"
         value = {"schema": 1, "status": "Accepted",
                  "submission_id": "cc4ee0a2-d27c-4a54-8d76-563d12d97079",
-                 "binaries": {"darwin_universal": cli.digest(self.binary)}}
+                 "binaries": {"darwin_arm64": cli.digest(self.binary)}}
         path.write_text(json.dumps(value))
         cli.receipt_check(path, self.binary, cli.digest(path))
         for key, changed in (("status", "Invalid"), ("submission_id", "not-a-uuid"),
-                             ("binaries", {"darwin_universal": "f" * 64})):
+                             ("binaries", {"darwin_arm64": "f" * 64}),
+                             ("binaries", {"darwin_universal": cli.digest(self.binary)})):
             bad = dict(value, **{key: changed})
             path.write_text(json.dumps(bad))
             with self.subTest(key=key), self.assertRaises(ValueError):
@@ -234,10 +326,12 @@ class ExternalTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cli.version_check(self.binary, "9.0.0")
 
-    def test_signature_requires_online_notarization_and_both_hardened_slices(self):
+    def test_signature_requires_online_notarization_and_hardened_arm64(self):
         display = ("Authority=Developer ID Application: Example\nTeamIdentifier=ABCDEFGHIJ\n"
                    "Timestamp=Nov 11, 2026\nCodeDirectory v=20500 flags=0x10000(runtime)\n")
         def result(args, **kwargs):
+            if args[0] == "lipo":
+                return subprocess.CompletedProcess(args, 0, "arm64\n", "")
             return subprocess.CompletedProcess(args, 0, "", display)
         with patch.object(cli.platform, "system", return_value="Darwin"), \
                 patch.object(cli.subprocess, "run", side_effect=result) as run:
@@ -245,12 +339,16 @@ class ExternalTests(unittest.TestCase):
             self.assertIn("--check-notarization", run.call_args_list[0].args[0])
             self.assertIn("=notarized", run.call_args_list[0].args[0])
             self.assertFalse(run.call_args_list[0].kwargs["capture_output"])
-            self.assertEqual(sum("--display" in call.args[0] for call in run.call_args_list), 2)
+            self.assertIn("--strict", run.call_args_list[0].args[0])
+            self.assertIn("--all-architectures", run.call_args_list[0].args[0])
+            self.assertEqual(sum("--display" in call.args[0] for call in run.call_args_list), 1)
         for missing in ("Authority=Developer ID Application: Example\n", "Timestamp=Nov 11, 2026\n",
                         "CodeDirectory v=20500 flags=0x10000(runtime)\n"):
             with patch.object(cli.platform, "system", return_value="Darwin"), \
-                    patch.object(cli.subprocess, "run", return_value=subprocess.CompletedProcess(
-                        [], 0, "", display.replace(missing, ""))):
+                    patch.object(cli.subprocess, "run", side_effect=lambda args, **kwargs:
+                        subprocess.CompletedProcess(args, 0, "arm64\n", "")
+                        if args[0] == "lipo" else subprocess.CompletedProcess(
+                            args, 0, "", display.replace(missing, ""))):
                 with self.assertRaises(ValueError):
                     cli.signature_check(self.binary, "ABCDEFGHIJ")
         with patch.object(cli.platform, "system", return_value="Darwin"), \
@@ -262,6 +360,45 @@ class ExternalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "signed upstream bytes"):
             cli.verify_binary(self.root, self.binary, "macos-arm64")
 
+    def test_signature_rejects_nonexact_architectures_and_wrong_signing_properties(self):
+        display = ("Authority=Developer ID Application: Example\nTeamIdentifier=ABCDEFGHIJ\n"
+                   "Timestamp=Nov 11, 2026\nCodeDirectory v=20500 flags=0x10000(runtime)\n")
+        for architectures in ("x86_64 arm64", "x86_64", "arm64 arm64", "arm64 arm64e", ""):
+            def result(args, **kwargs):
+                return subprocess.CompletedProcess(args, 0, architectures if args[0] == "lipo" else "", display)
+            with self.subTest(architectures=architectures), \
+                    patch.object(cli.platform, "system", return_value="Darwin"), \
+                    patch.object(cli.subprocess, "run", side_effect=result) as run:
+                with self.assertRaisesRegex(ValueError, "architectures differ"):
+                    cli.signature_check(self.binary, "ABCDEFGHIJ")
+                self.assertFalse(any("--display" in call.args[0] for call in run.call_args_list))
+        for invalid in (display.replace("ABCDEFGHIJ", "Y69CWUC25B"),
+                        display.replace("TeamIdentifier=ABCDEFGHIJ\n", ""),
+                        display + "Signature=adhoc\n"):
+            def result(args, **kwargs):
+                return subprocess.CompletedProcess(args, 0, "arm64" if args[0] == "lipo" else "", invalid)
+            with self.subTest(display=invalid), \
+                    patch.object(cli.platform, "system", return_value="Darwin"), \
+                    patch.object(cli.subprocess, "run", side_effect=result):
+                with self.assertRaisesRegex(ValueError, "Developer ID"):
+                    cli.signature_check(self.binary, "ABCDEFGHIJ")
+
+    def test_historical_development_universal_requires_explicit_profile(self):
+        display = ("Authority=Developer ID Application: Example\nTeamIdentifier=ABCDEFGHIJ\n"
+                   "Timestamp=Nov 11, 2026\nCodeDirectory v=20500 flags=0x10000(runtime)\n")
+        def result(args, **kwargs):
+            return subprocess.CompletedProcess(args, 0, "x86_64 arm64" if args[0] == "lipo" else "", display)
+        with patch.object(cli.platform, "system", return_value="Darwin"), \
+                patch.object(cli.subprocess, "run", side_effect=result) as run:
+            cli.signature_check(self.binary, architectures=("x86_64", "arm64"))
+            self.assertEqual(sum("--display" in call.args[0] for call in run.call_args_list), 2)
+        receipt = self.root / "receipt.json"
+        receipt.write_text(json.dumps({
+            "schema": 1, "status": "Accepted",
+            "submission_id": "cc4ee0a2-d27c-4a54-8d76-563d12d97079",
+            "binaries": {"darwin_universal": cli.digest(self.binary)}}))
+        cli.receipt_check(receipt, self.binary, cli.digest(receipt), key="darwin_universal")
+
     def test_notarization_requirement_retry_is_bounded_and_fail_closed(self):
         display = ("Authority=Developer ID Application: Example\nTeamIdentifier=ABCDEFGHIJ\n"
                    "Timestamp=Nov 11, 2026\nCodeDirectory v=20500 flags=0x10000(runtime)\n")
@@ -269,7 +406,9 @@ class ExternalTests(unittest.TestCase):
         passed = subprocess.CompletedProcess([], 0, "", display)
         with patch.object(cli.platform, "system", return_value="Darwin"), \
                 patch.object(cli.time, "sleep") as sleep, \
-                patch.object(cli.subprocess, "run", side_effect=[requirement_failure, *([passed] * 4)]) as run:
+                patch.object(cli.subprocess, "run", side_effect=[
+                    requirement_failure, passed,
+                    subprocess.CompletedProcess([], 0, "arm64\n", ""), passed]) as run:
             cli.signature_check(self.binary, "ABCDEFGHIJ")
             sleep.assert_called_once_with(15)
             self.assertEqual(sum("--check-notarization" in call.args[0]
@@ -376,7 +515,7 @@ class ExternalTests(unittest.TestCase):
                     patch.object(cli, "signature_check") as signature:
                 archive = package_component.package(
                     fixture.root, repository="owner/example-component", development=True)
-                signature.assert_called_once_with(mac)
+                signature.assert_called_once_with(mac, architectures=("x86_64", "arm64"))
         with patch.dict(os.environ, {"GITHUB_REF_NAME": "feature/oidc-wrapper"}), \
                 patch.object(cli, "dev_verify", return_value=mac), \
                 patch.object(cli, "signature_check"):

@@ -5,6 +5,11 @@ configuration. `authenticate()` returns a Task immediately; `version()` also
 returns a Task. Neither API waits for the child process on the calling/UI
 process. `compiled` reports actual component execution mode for acceptance.
 
+Supported targets are native **macOS ARM64** (`macOS-arm64`, or the macOS
+default) and **Windows x64** (`Windows-x64`, explicit). Intel macOS, Rosetta,
+Windows ARM64 and the former `macOS-universal` selector are unsupported and
+return `unsupported_architecture`; there is no Intel or universal fallback.
+
 The wrapper accepts exactly the upstream protocol v1 fields:
 
 | Field | Default / policy |

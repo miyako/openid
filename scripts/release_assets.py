@@ -6,7 +6,7 @@ import re
 import subprocess
 
 from build_provenance import commit, sha256, source_digest
-from ci_config import ROOT, TARGETS, load_config
+from ci_config import ROOT, TARGETS, load_config, targets
 from release_ref import create_tag as create_release_tag, verify as verify_tag
 from sign_release import release_policy, submission_uuid
 from test_4d import _read_json, validate_status
@@ -100,6 +100,10 @@ def verify_assets(root, repository, tag, revision, apple_signing=False):
     if config.get("cli_source") == "external-oidc-cli-v1":
         require_desktop_evidence(passed("source_host"))
         require_desktop_evidence(passed("compiled_host"))
+        intel = steps.get("native_intel_4d")
+        if (not isinstance(intel, dict) or intel.get("status") != "unsupported"
+                or "cli_test_macos-x64" in steps):
+            raise ValueError("external acceptance must label Intel macOS unsupported, not require Intel CLI evidence")
     for name in ("assembly", "package"):
         passed(name)
     compiled = passed("compile")
@@ -111,7 +115,7 @@ def verify_assets(root, repository, tag, revision, apple_signing=False):
                    for field in ("input_sha256", "output_sha256"))):
         raise ValueError("both compiler targets and input/output provenance are required")
     source = source_digest(root)
-    for target in TARGETS:
+    for target in targets(config):
         manifest = passed("cli_test_" + target)
         if (not isinstance(manifest, dict) or manifest.get("target") != target
                 or manifest.get("execution") != "passed" or manifest.get("commit") != revision
@@ -173,18 +177,21 @@ def verify_assets(root, repository, tag, revision, apple_signing=False):
 
 def publish(root, repository, tag, revision, apple_signing=False, *, create_tag=False):
     assets = verify_assets(root, repository, tag, revision, apple_signing)
+    external = load_config(root).get("cli_source") == "external-oidc-cli-v1"
     if create_tag:
         create_release_tag(root, repository, tag, revision)
     else:
         verify_tag(root, tag, revision)
     notes = (
-        "Compiled component with universal macOS and x64 Windows CLI resources. "
-        "Class/method source is excluded; the exact final ZIP passed compiled-host acceptance. "
+        ("Compiled component with ARM64-only macOS and x64 Windows CLI resources. "
+         if external else "Compiled component with universal macOS and x64 Windows CLI resources. ")
+        + "Class/method source is excluded; the exact final ZIP passed compiled-host acceptance. "
         + ("macOS CLI and native libraries are Developer ID signed; the DMG is notarized and stapled. "
            "The dependency-manager ZIP was repacked from that final mounted DMG. "
            if apple_signing else "Unsigned release; no Apple credentials were used. ")
         + "Adjacent acceptance evidence binds the assets, source revision, native manifests and host reports. "
-        "Native Intel/Windows 4D and installed-release download checks remain separate observations.")
+        + ("Intel macOS is unsupported; native Windows 4D and installed-release download checks remain separate observations."
+           if external else "Native Intel/Windows 4D and installed-release download checks remain separate observations."))
     subprocess.run(["gh", "release", "create", tag, *(str(path) for path in assets),
                     "--repo", repository, "--verify-tag", "--title", tag, "--notes", notes],
                    cwd=root, check=True)

@@ -14,7 +14,7 @@ test user, and supply the tenant issuer and public client ID in host code.
 Use `listen_address:"127.0.0.1:42813"` and `callback_path:"/callback"`.
 Do not fabricate a tenant, reuse unrelated credentials, or add a client secret.
 
-On a real 4D desktop host, confirm UI responsiveness during browser login and
+On a native macOS ARM64 or Windows x64 4D desktop host, confirm UI responsiveness during browser login and
 MFA, success identity issuer+subject, repeated login, cancellation before and
 after browser opening, form unload, host-process exit, occupied callback port,
 wrong state/path/issuer, timeout, provider denial and offline/JWKS errors.

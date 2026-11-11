@@ -35,6 +35,58 @@ class WorkflowTests(unittest.TestCase):
     def test_canonical_contract(self):
         self.assertEqual(workflow_contract.validate(self.root)["status"], "passed")
 
+    def test_external_download_set_is_exactly_arm64_and_windows_in_ci_and_publish(self):
+        for name, job_name in (("ci", "assembly"), ("publish", "compile")):
+            path = self.root / ".github/workflows" / (name + ".yml")
+            original = path.read_text()
+            downloads = [step["with"] for step in self.document(name)["jobs"][job_name]["steps"]
+                         if step.get("uses") == "actions/download-artifact@v4"]
+            self.assertEqual(downloads, [
+                {"name": "cli-macos-arm64", "path": "build/macos-arm64"},
+                {"name": "cli-windows-x64", "path": "build/windows-x64"}])
+            for action in (
+                    lambda steps: steps.append({"uses": "actions/download-artifact@v4",
+                                                "with": {"name": "cli-macos-x64", "path": "build/macos-x64"}}),
+                    lambda steps: steps.remove(next(step for step in steps
+                        if step.get("with", {}).get("name") == "cli-macos-arm64")),
+                    lambda steps: next(step for step in steps
+                        if step.get("with", {}).get("name") == "cli-macos-arm64")["with"].update(path="build/macos-x64"),
+                    lambda steps: next(step for step in steps
+                        if step.get("with", {}).get("name") == "cli-macos-arm64").update({"if": "false"})):
+                self.mutate(name, lambda d: action(d["jobs"][job_name]["steps"]))
+                with self.subTest(name=name, action=action), self.assertRaises(ValueError):
+                    workflow_contract.validate(self.root)
+                path.write_text(original)
+
+    def test_retained_native_source_profile_requires_three_artifacts(self):
+        path = self.root / "workflow-contract.json"
+        config = json.loads(path.read_text())
+        config["profile"] = "cli-universal-v1"
+        path.write_text(json.dumps(config))
+        external_condition = "github.event_name == 'workflow_dispatch' && vars.FOURD_ENABLED == 'true' && !inputs.release_call"
+        generic_condition = "vars.FOURD_ENABLED == 'true' && github.ref_type != 'tag' && !inputs.release_call"
+
+        def generic_ci(document):
+            native = document["jobs"]["native"]
+            next(step for step in native["steps"] if "external_cli.py" in step.get("run", ""))["run"] = (
+                'python scripts/build_cli.py --target "$CLI_TARGET" --language "$CLI_LANGUAGE"')
+            for step in document["jobs"]["assembly"]["steps"]:
+                if step.get("if") == external_condition:
+                    step["if"] = generic_condition
+
+        self.mutate("ci", generic_ci)
+        with self.assertRaisesRegex(ValueError, "supported native target set"):
+            workflow_contract.validate(self.root)
+        for name, job_name in (("ci", "assembly"), ("publish", "compile")):
+            def insert_intel(document):
+                steps = document["jobs"][job_name]["steps"]
+                index = next(index for index, step in enumerate(steps)
+                             if step.get("with", {}).get("name") == "cli-macos-arm64")
+                steps.insert(index, {"uses": "actions/download-artifact@v4",
+                                     "with": {"name": "cli-macos-x64", "path": "build/macos-x64"}})
+            self.mutate(name, insert_intel)
+        self.assertEqual(workflow_contract.validate(self.root)["status"], "passed")
+
     def test_external_adapter_preflight_cannot_be_removed_and_native_cannot_rebuild(self):
         self.assertEqual(workflow_contract.validate(self.root)["profile"], "external-oidc-cli-v1")
         for action in (

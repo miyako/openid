@@ -28,12 +28,16 @@ returning a Task with `done`, `result()`, `cancel()`, `dispose()` and
 `takeAuthorizationURL()`. No UI-thread wait is allowed: bounded `.wait(0.05)`
 belongs only to the per-attempt `CALL WORKER`. Generic `_Process` argument
 round-trip checks remain independent of OIDC identity decoding.
+The native macOS architecture preflight uses fixed `/usr/bin/uname -m` with a
+one-second timeout inside that worker; Client construction/authenticate/version
+never wait for it on the calling/UI process. No architecture result is inferred
+from absent tool4d `System info` properties.
 
 ## Reviewed production dependency
 
 `scripts/oidc-cli-pin.json` enables exact **v0.1.1** asset acquisition with
-`status:reviewed`. Its archives, Developer ID, hardened runtime, timestamp,
-both slices, online notarization and native `version` have passed independent
+`status:reviewed`. Its ARM64-only macOS archive, Developer ID, hardened runtime,
+timestamp, exact architecture, online notarization and native `version` have passed independent
 verification. The owner authorized MIT licensing, explicitly covering the
 existing release source and binaries, at separate licensing commit
 `847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc`. All five upstream licensing
@@ -43,7 +47,7 @@ covers both dependencies and the Go runtime, including PATENTS and embedded
 third-party licenses. See [redistribution provenance](../docs/redistribution.md)
 and [v0.1.1 evidence](../docs/acceptance.md#published-v011-asset-review).
 Neither unsigned `v0.1.0` nor `v0.1.0-rc.2` is approved. A release must have a reviewed exact
-`miyako/oidc-cli` tag/version, universal macOS and unsigned Windows x64 archive
+`miyako/oidc-cli` tag/version, ARM64 macOS and unsigned Windows x64 archive
 names, archive and executable SHA256 values, `APPLE_NOTARIZATION.json` SHA256,
 expected Developer ID team and redistribution licenses. Permission comes from
 the explicitly published owner grant, not public repository visibility.
@@ -61,7 +65,7 @@ grant; the actual pin also retains the notice manifest and scope documentation.
   "receipt_sha256": "REVIEWED_SHA256",
   "assets": {
     "macos": {
-      "name": "oidc-cli_X.Y.Z_darwin_universal.tar.gz",
+      "name": "oidc-cli_X.Y.Z_darwin_arm64.tar.gz",
       "sha256": "REVIEWED_ARCHIVE_SHA256",
       "binary_sha256": "REVIEWED_EXECUTABLE_SHA256"
     },
@@ -92,8 +96,10 @@ python3 scripts/ci_config.py assemble
 Acquisition verifies the pinned archive before extracting its only allowed root
 regular executable. Traversal, links, duplicate/extra entries and unexpected
 macOS modes are rejected. The accepted receipt must bind the exact signed
-universal binary, which must pass Developer ID, hardened runtime, timestamp,
-both architectures and online notarization checks **before execution**. Native
+ARM64 binary through `binaries.darwin_arm64`, which must pass Developer ID,
+hardened runtime, timestamp, exact ARM64-only architecture and online
+notarization checks **before execution**. Universal and Intel binaries are
+rejected even if an ARM64 slice is present. Native
 `version` must return `protocol_version:1`, `ok:true` and the upstream version;
 component and CLI versions are independent. Windows x64 is explicitly unsigned
 and tested natively, not presented as publisher-authenticated.
@@ -105,9 +111,11 @@ failure as transient or accept a receipt/plain signature in place of a passing
 online requirement. Other exit codes and timeouts fail immediately. OS
 signature diagnostics are visible; credential-bearing CLI output is not.
 
-Each same-commit manifest binds adapter inputs, pin, licenses, archive digest and
-binary bytes. Assembly copies the universal binary unchanged; it never
-reassembles/re-signs its slices. Actions strips modes, so assembly restores the
+The external native matrix requires exactly `macos-arm64` and `windows-x64`;
+no Intel job, artifact download or manifest is required or accepted as a
+substitute. Each same-commit manifest binds adapter inputs, pin, licenses,
+archive digest and binary bytes. Assembly copies the thin ARM64 binary
+unchanged; it never reassembles/re-signs it. Actions strips modes, so assembly restores the
 reviewed archive's executable mode. Packaging rechecks hashes/signatures and
 bundles notices. Optional outer signing touches 4D libraries/container only:
 the notarized upstream CLI is immutable. Receipt JSON is informational evidence,
@@ -134,6 +142,13 @@ lifecycle execution can qualify when the stable legacy process-properties API
 supplies real ownership metadata; there is no tool4d-specific exclusion. This
 status does not assert normal IDE UI, interactive browser/provider, or MFA
 acceptance.
+
+Intel macOS support was explicitly deferred after independent fresh Intel
+runners rejected the online `notarized` requirement for the earlier universal
+asset. The failure's cause is not established; it is not evidence that the CLI
+was unsigned or CPU-incompatible. This scope decision leaves all supported
+platform signing and acceptance gates intact. The generic x86_64 4D compiler
+target remains necessary for Windows x64, not Intel macOS support.
 
 ## Authorized local development artifact (not release eligible)
 

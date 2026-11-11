@@ -109,14 +109,18 @@ def load_pin(root=ROOT):
     assets = release.get("assets", {})
     if not isinstance(assets, dict):
         raise ValueError("reviewed platform assets must be an object")
-    for target, suffix in (("macos", "darwin_universal.tar.gz"), ("windows-x64", "windows_amd64.zip")):
+    if set(assets) != {"macos", "windows-x64"}:
+        raise ValueError("only macOS ARM64 and Windows x64 assets are supported")
+    for target, suffix in (("macos", "darwin_arm64.tar.gz"), ("windows-x64", "windows_amd64.zip")):
         asset = assets.get(target, {})
         if not isinstance(asset, dict):
             raise ValueError("reviewed archive must be an object")
         if asset.get("name") != "oidc-cli_" + version + "_" + suffix:
-            raise ValueError("exact universal macOS / Windows x64 archive required")
+            raise ValueError("exact ARM64 macOS / Windows x64 archive required")
         checked_hash(asset.get("sha256"))
         checked_hash(asset.get("binary_sha256"))
+    if assets["macos"].get("architectures") != ["arm64"]:
+        raise ValueError("macOS release must explicitly require ARM64 only")
     licenses = release.get("licenses")
     if (not isinstance(licenses, list) or not licenses
             or {notice.get("kind") for notice in licenses if isinstance(notice, dict)}
@@ -172,7 +176,7 @@ def extract(archive, output, expected_hash):
     return output
 
 
-def receipt_check(path, binary, expected_hash, key="darwin_universal"):
+def receipt_check(path, binary, expected_hash, key="darwin_arm64"):
     if digest(regular(path)) != checked_hash(expected_hash):
         raise ValueError("notarization receipt SHA256 mismatch")
     receipt = json_object(path.read_text())
@@ -185,7 +189,10 @@ def receipt_check(path, binary, expected_hash, key="darwin_universal"):
         raise ValueError("notarization receipt does not bind accepted binary")
 
 
-def signature_check(binary, team=None):
+def signature_check(binary, team=None, architectures=("arm64",)):
+    """Verify ARM64 releases; universal is an explicit historical development opt-in."""
+    if architectures not in (("arm64",), ("x86_64", "arm64")):
+        raise ValueError("unsupported macOS architecture profile")
     if platform.system() != "Darwin":
         raise ValueError("Apple signature verification requires macOS")
     for attempt in range(4):
@@ -200,10 +207,13 @@ def signature_check(binary, team=None):
             print("Apple notarization requirement not satisfied; retrying in 15 seconds "
                   f"(attempt {attempt + 2}/4)", file=sys.stderr)
             time.sleep(15)
-    subprocess.run(["lipo", str(binary), "-verify_arch", "x86_64", "arm64"],
-                   check=True, capture_output=True, timeout=20)
+    result = subprocess.run(["lipo", "-archs", str(binary)],
+                            check=True, capture_output=True, text=True, timeout=20)
+    actual = result.stdout.split()
+    if len(actual) != len(architectures) or set(actual) != set(architectures):
+        raise ValueError("macOS binary architectures differ from required profile")
     teams = set()
-    for arch in ("x86_64", "arm64"):
+    for arch in architectures:
         result = subprocess.run(["codesign", "--display", "--verbose=4", "--arch", arch, str(binary)],
                                 check=True, capture_output=True, text=True, timeout=20)
         display = result.stdout + result.stderr
@@ -246,14 +256,20 @@ def fetch(url, path):
         destination(path).write_bytes(response.read(128 * 1024 * 1024 + 1))
 
 
+def asset_key(target):
+    if target not in {"macos-arm64", "windows-x64"}:
+        raise ValueError("only macos-arm64 and windows-x64 targets are supported")
+    return "macos" if target == "macos-arm64" else "windows-x64"
+
+
 def acquire(root, target):
     from build_provenance import record
     from build_cli import native_target
     root = Path(root)
+    key = asset_key(target)
     release = load_pin(root)
     if target != native_target():
         raise ValueError("acquisition/version evidence requires the native target")
-    key = "windows-x64" if target == "windows-x64" else "macos"
     asset = release["assets"][key]
     cache = root / "build/external-cli"
     base = f"https://github.com/{REPOSITORY}/releases/download/{release['tag']}/"
@@ -282,8 +298,8 @@ def acquire(root, target):
 
 
 def verify_binary(root, binary, target):
+    key = asset_key(target)
     release = load_pin(root)
-    key = "windows-x64" if target == "windows-x64" else "macos"
     if digest(regular(binary)) != release["assets"][key]["binary_sha256"]:
         raise ValueError("bundled CLI differs from reviewed signed upstream bytes")
     if key == "macos":
@@ -321,8 +337,9 @@ def dev_verify(root):
         dev_checksums(folder)
         archive_name = f"oidc-cli_{DEV_VERSION}_darwin_universal.tar.gz"
         extract(folder / archive_name, binary, DEV_DIGESTS[archive_name])
-        receipt_check(folder / "APPLE_NOTARIZATION.json", binary, DEV_DIGESTS["APPLE_NOTARIZATION.json"])
-        signature_check(binary)
+        receipt_check(folder / "APPLE_NOTARIZATION.json", binary,
+                      DEV_DIGESTS["APPLE_NOTARIZATION.json"], key="darwin_universal")
+        signature_check(binary, architectures=("x86_64", "arm64"))
         version_check(binary, DEV_VERSION)
         destination(folder / "verified/development-only.json").write_text(json.dumps({
             "release_eligible": False, "repository": REPOSITORY, "run_id": 43041282015,
@@ -338,7 +355,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("check-pin", "acquire", "verify-dev"))
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("--target", choices=("macos-x64", "macos-arm64", "windows-x64"))
+    parser.add_argument("--target", choices=("macos-arm64", "windows-x64"))
     args = parser.parse_args()
     try:
         if args.command == "check-pin":

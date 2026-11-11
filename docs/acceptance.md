@@ -1,5 +1,31 @@
 # Acceptance scope
 
+## Current supported scope: macOS ARM64 and Windows x64
+
+The owner explicitly deferred Intel macOS for the first release. Production
+pins the original **ARM64-only** `oidc-cli_0.1.1_darwin_arm64.tar.gz`:
+archive SHA256 `5465c9c57b9d0b6bf53405066887c4de200a96c4ca27d1f7365b33fb03af306b`,
+binary SHA256 `42412657b9f3eecb7666c9a466cd4d1d9e83df5820151e88c74418b7999eedca`.
+The receipt binds `darwin_arm64`; exact thin ARM64 architecture, Developer ID,
+hardened runtime, timestamp and the online notarized requirement remain
+mandatory. Windows x64 pins and the six MIT/dependency/runtime notices are
+unchanged. No executable was rebuilt, thinned, re-signed or dequarantined.
+
+The external CI, native manifests, assembly and release evidence require the
+two supported targets only. Intel is **unsupported**, not a silently skipped
+required check. The facade accepts `macOS-arm64` (or its macOS default) and
+explicit `Windows-x64`; `macOS-universal` is rejected. Its fixed-path
+`uname -m` probe runs only inside the Client/Task worker, with a one-second
+timeout and exact `arm64` result validation. Intel/Rosetta and failed/unknown
+probes return `unsupported_architecture`, without blocking the calling UI.
+The host fixture exercises the predicate with synthetic Intel/failed-probe
+cases and the actual native ARM64 host; it is not native Intel execution.
+
+Both `x86_64_generic` and `arm64_macOS_lib` 4D compiler targets are retained:
+generic x86_64 compiled code supports Windows x64, not an Intel macOS claim.
+The historical universal investigations below explain the scope decision;
+their old package hashes are not current ARM64-only package acceptance.
+
 Published **v0.1.1** now satisfies the signed/notarized asset checks, and exact
 tag/archive/binary/receipt metadata is recorded. The owner explicitly authorized
 MIT licensing covering the existing release. The immutable grant and complete
@@ -33,24 +59,25 @@ Real source/compiled fixtures distinguish:
 | Synthetic identity fixture | Wrapper schema/issuer/token policy only, **not** provider login |
 | Upstream Keycloak E2E | Separately maintained CLI real-provider behavior only |
 
-Native Windows/Intel 4D, Auth0/browser/MFA, Dependency Manager downloaded
+Native Windows 4D, Auth0/browser/MFA, Dependency Manager downloaded
 release installation, outer signed/stapled DMG and 4D Client/Server login are
 separate checks. Do not infer them from Apple Silicon tool4d or native CLI
-execution. Windows CLI has no configured Authenticode signing.
+execution. Intel macOS is out of scope. Windows CLI has no configured
+Authenticode signing.
 
 Save actual run reports under ignored `build/`, keeping source-host,
 compile and compiled-host evidence distinct. A green test suite or compiler
 exit without a fresh status file cannot approve a package. No release, tag or
 merge is authorized here.
 
-## Executed local acceptance
+## Historical universal development acceptance
 
 On macOS ARM64, free tool4d **20.7 build 20.101905** passed the source fixture,
 actual `Compile project` for `x86_64_generic` + `arm64_macOS_lib`, and the same
 fixture against the **exact unpacked development ZIP** with compiled mode true.
 The approved CLI reports `0.0.0-signing-check`, binary SHA256
 `fe77be341661bfa05c36e26fada3abfb418ad7d666aecdace503129da28fd768`.
-Actual native execution was ARM64; compiling the Intel target and verifying
+Actual native execution was ARM64; compiling the generic x86_64 target and verifying
 both Mach-O signatures is not Intel runtime execution.
 
 The source investigation corrected real compatibility issues:
@@ -91,7 +118,7 @@ names the executable; no license activation is performed). Then use the README
 form sample with the user's own provider configuration and complete the
 [interactive provider checklist](providers.md). Check UI responsiveness while
 browser/MFA is pending, cancellation, form unload/disposal and host shutdown.
-Repeat on native Intel macOS and Windows x64; do not infer those results from
+Repeat on native Windows x64; do not infer those results from
 the ARM64 headless run. No normal desktop installation/activation is authorized
 or performed by these instructions.
 
@@ -100,7 +127,7 @@ or performed by these instructions.
 The user-requested release
 [`v0.1.1`](https://github.com/miyako/oidc-cli/releases/tag/v0.1.1) points to
 source commit `1c909c00e6aa4924c4755e325f8ba8bb25927b31`. All four archives and
-the receipt passed `SHA256SUMS`; the selected universal/Windows archive and
+the receipt passed `SHA256SUMS`; the originally selected universal/Windows archive and
 receipt SHA256 values also match the release API digests. Extraction rejected
 anything except each exact root regular executable.
 
@@ -113,7 +140,7 @@ version `0.1.1`. The executable was not re-signed, reassembled or dequarantined.
 Windows archive/hash/shape were inspected; Windows execution and Authenticode
 signing are not claimed.
 
-Exact selected archive/binary/receipt hashes are recorded in
+The current ARM64-only archive/binary/receipt hashes are recorded in
 [`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json).
 Its status is now `reviewed`, with MIT license/grant and all required notices
 from licensing commit `847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc` pinned
@@ -123,7 +150,7 @@ The component's earlier full source/compiled development-host acceptance used
 the separately approved CI artifact, not this new release; those scopes must
 not be conflated.
 
-## Licensed v0.1.1 integration and current Intel gate
+## Historical universal pin and Intel deferral
 
 The MIT grant/notices and reviewed production pin are enabled by component
 commit `f7fe775ef9f56f246043283203f69a892e320044`. Local ARM64 production
@@ -155,3 +182,8 @@ to Apple; it is not independent cold-Intel acceptance and does not override
 the current failure. Neither retries nor a receipt/plain signature can replace
 a passing online requirement. No unsigned fallback, requirement bypass,
 re-signing, tag replacement, release or merge was performed.
+
+Following these results, the owner chose to defer Intel macOS rather than
+relax the requirement or advertise unsupported universal compatibility.
+Reintroducing Intel would require an explicit scope change, independently
+passing native verification and complete facade/packaging/host acceptance.

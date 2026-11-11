@@ -8,17 +8,40 @@ Class constructor($executableName : Text; $target : Text)
 Function get compiled()->$compiled : Boolean
 	$compiled:=Is compiled mode
 
+Function supportsMacOS($probe : Object)->$supported : Boolean
+	If ($probe=Null)
+		return False
+	End if
+	If ((Value type($probe.ok)#Is boolean) | (Value type($probe.stdout)#Is text) | (Value type($probe.stderr)#Is text))
+		return False
+	End if
+	If ((Value type($probe.exitCode)#Is real) & (Value type($probe.exitCode)#Is longint))
+		return False
+	End if
+	$supported:=$probe.ok & ($probe.exitCode=0) & cs._Text.new().equal($probe.stdout; "arm64\n") & ($probe.stderr="")
+
 Function resolve()->$result : Object
 	var $platform; $name : Text
 	var $file : 4D.File
+	var $architecture; $system : Object
 	If (Not(Match regex("^[a-z][a-z0-9-]{0,62}$"; This.executableName)))
 		return New object("ok"; False; "error"; New object("code"; "invalid_argument"; "message"; "Executable name must be a CLI basename, not a path"))
 	End if
 	$name:=This.executableName
 	Case of
 		: (Is macOS)
-			If ((This.target#"") & (This.target#"macOS-universal"))
-				return New object("ok"; False; "error"; New object("code"; "unsupported_architecture"; "message"; "macOS requires macOS-universal"))
+			If ((This.target#"") & (Not(cs._Text.new().equal(This.target; "macOS-arm64"))))
+				return New object("ok"; False; "error"; New object("code"; "unsupported_architecture"; "message"; "macOS requires macOS-arm64; Intel and universal targets are unsupported"))
+			End if
+			$system:=System info
+			If (Value type($system.macRosetta)=Is boolean)
+				If ($system.macRosetta)
+					return New object("ok"; False; "error"; New object("code"; "unsupported_architecture"; "message"; "Rosetta execution is unsupported; run native macOS ARM64 4D"))
+				End if
+			End if
+			$architecture:=cs._Process.new().execute(File("/usr/bin/uname"; fk posix path); New collection("-m"); 1)
+			If (Not(This.supportsMacOS($architecture)))
+				return New object("ok"; False; "error"; New object("code"; "unsupported_architecture"; "message"; "Native macOS ARM64 could not be verified; Intel and Rosetta are unsupported"))
 			End if
 			$platform:="macOS"
 		: (Is Windows)

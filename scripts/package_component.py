@@ -26,6 +26,11 @@ RUNTIME_NOTICES = {"go": "Go-LICENSE.txt", "rust": "Rust-LICENSE-MIT.txt"}
 EXCLUDED = {"data", "logs", ".git", ".ds_store", "__macosx"}
 
 
+def resource_architectures(config, *, development=False):
+    return (("arm64",) if config.get("cli_source") == "external-oidc-cli-v1" and not development
+            else ("x86_64", "arm64"))
+
+
 def write_zip(stream, entries):
     directories = {parent.as_posix() + "/" for name, _, _ in entries
                    for parent in PurePosixPath(name).parents if parent.as_posix() != "."}
@@ -39,13 +44,36 @@ def write_zip(stream, entries):
             archive.writestr(info, content, compresslevel=9)
 
 
-def validate_resources(component, cli, *, macos_only=False):
+def validate_resources(component, cli, *, macos_only=False, macos_architectures=("x86_64", "arm64")):
     mac = component / "Resources" / "bin" / "macOS" / cli
     windows = component / "Resources" / "bin" / "Windows" / (cli + ".exe")
     for path in ((mac,) if macos_only else (mac, windows)):
         if not path.is_file() or path.is_symlink():
             raise ValueError(f"missing regular native resource: {path}")
     data = mac.read_bytes()
+    if macos_architectures == ("arm64",):
+        if (len(data) < 32 or data[:4] != b"\xcf\xfa\xed\xfe"
+                or struct.unpack_from("<I", data, 4)[0] != 0x0100000C
+                or struct.unpack_from("<I", data, 8)[0] != 0):
+            raise ValueError("macOS resource must be a thin ARM64 Mach-O")
+    elif macos_architectures == ("x86_64", "arm64"):
+        validate_universal(data)
+    else:
+        raise ValueError("unsupported macOS resource architecture profile")
+    if macos_only:
+        return mac, None
+    data = windows.read_bytes()
+    if len(data) < 64 or data[:2] != b"MZ":
+        raise ValueError("Windows resource must be a PE executable")
+    offset = struct.unpack_from("<I", data, 0x3C)[0]
+    if (offset < 64 or len(data) < offset + 26 or data[offset:offset + 4] != b"PE\0\0"
+            or struct.unpack_from("<H", data, offset + 4)[0] != 0x8664
+            or struct.unpack_from("<H", data, offset + 24)[0] != 0x20B):
+        raise ValueError("Windows resource must have an x64 PE32+ header")
+    return mac, windows
+
+
+def validate_universal(data):
     if len(data) < 8 or data[:4] not in (b"\xca\xfe\xba\xbe", b"\xca\xfe\xba\xbf"):
         raise ValueError("macOS resource must be a universal Mach-O")
     wide = data[:4] == b"\xca\xfe\xba\xbf"
@@ -69,17 +97,6 @@ def validate_resources(component, cli, *, macos_only=False):
         architectures.add(cpu)
     if architectures != {0x01000007, 0x0100000C}:
         raise ValueError("macOS resource must contain x86_64 and arm64")
-    if macos_only:
-        return mac, None
-    data = windows.read_bytes()
-    if len(data) < 64 or data[:2] != b"MZ":
-        raise ValueError("Windows resource must be a PE executable")
-    offset = struct.unpack_from("<I", data, 0x3C)[0]
-    if (offset < 64 or len(data) < offset + 26 or data[offset:offset + 4] != b"PE\0\0"
-            or struct.unpack_from("<H", data, offset + 4)[0] != 0x8664
-            or struct.unpack_from("<H", data, offset + 24)[0] != 0x20B):
-        raise ValueError("Windows resource must have an x64 PE32+ header")
-    return mac, windows
 
 
 def validate_compile(root, component, repository):
@@ -152,7 +169,8 @@ def package(root=ROOT, *, repository=None, tag=None, language=None, development=
     component = root / "component" / config["repository"]
     if component.is_symlink() or component.parent.is_symlink():
         raise ValueError("component directories must not be symlinks")
-    validate_resources(component, config["cli"], macos_only=development)
+    validate_resources(component, config["cli"], macos_only=development,
+                       macos_architectures=resource_architectures(config, development=development))
     development_marker = None
     if development:
         from external_cli import dev_verify, digest, signature_check, DEV_VERSION, DEV_SHA
@@ -160,7 +178,7 @@ def package(root=ROOT, *, repository=None, tag=None, language=None, development=
         mac = component / "Resources/bin/macOS" / config["cli"]
         if digest(mac) != digest(verified) or stat.S_IMODE(mac.stat().st_mode) != 0o755:
             raise ValueError("development package requires exact approved signed CLI bytes and mode")
-        signature_check(mac)
+        signature_check(mac, architectures=("x86_64", "arm64"))
         development_marker = {
             "schema": 1, "release_eligible": False, "scope": "macOS-only development host acceptance",
             "upstream_commit": DEV_SHA, "upstream_version": DEV_VERSION,

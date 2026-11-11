@@ -13,9 +13,10 @@
     "receipt_sha256": "717fc3c3040174d3635170d57ea82b1a955c33df482db5402aba744fd1a62b3e",
     "assets": {
       "macos": {
-        "name": "oidc-cli_0.1.1_darwin_universal.tar.gz",
-        "sha256": "c684fe13472917abb822b0e7575a039b836ea95c67b189d18e656bef3149307b",
-        "binary_sha256": "6f2f1630e1b0958667350c208a26d179e1f5e7d99ce9525e341a63c91d814a07"
+        "name": "oidc-cli_0.1.1_darwin_arm64.tar.gz",
+        "sha256": "5465c9c57b9d0b6bf53405066887c4de200a96c4ca27d1f7365b33fb03af306b",
+        "binary_sha256": "42412657b9f3eecb7666c9a466cd4d1d9e83df5820151e88c74418b7999eedca",
+        "architectures": ["arm64"]
       },
       "windows-x64": {
         "name": "oidc-cli_0.1.1_windows_amd64.zip",
