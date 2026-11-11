@@ -5,10 +5,6 @@ classes `Client` / `Task`, external executable basename `oidc-cli`. Do not move
 OIDC logic here, add NetKit/native plug-ins, rebuild the CLI or restore a
 template greeting starter.
 
-Supported deployment targets are native macOS ARM64 and Windows x64 only.
-Intel macOS, Rosetta and the former macOS-universal API selector are unsupported.
-Do not silently reintroduce Intel resources, jobs, manifests or support claims.
-
 The source scaffold was initialized using
 `miyako/4d-component-template` at
 `d2e161b61c9f8d37f30c1410fb5c11f9f08a826d`. Read its
@@ -22,9 +18,17 @@ deliberate external pinned-asset adapter.** Do not run initialize/rename again.
 - Only use reviewed exact upstream release tags, platform archive SHA256 and
   receipt hashes. Acquire at build time, never runtime/latest. Verify archives
   before extraction; reject symlinks, traversal, extra entries and mixed inputs.
-- Preserve notarized Developer ID CLI bytes and mode. Never reassemble, re-sign or
+- Preserve notarized Developer ID CLI bytes and mode. Never lipo, re-sign or
   remove quarantine from the external macOS executable. No unsigned fallback.
   Windows x64 has no configured Authenticode signing; do not claim otherwise.
+- Universal macOS is the owner-approved deployment scope. Only actual native
+  Intel acquisition uses the explicit reviewed receipt-only notarization tier:
+  strict all-slice crypto/Developer ID/team/runtime/timestamp checks and the
+  pinned Accepted receipt remain mandatory, but online notarized status is
+  not run. ARM64 always requires online notarization; no failed-check downgrade,
+  caller override or translated-process Intel evidence is allowed.
+  Bind the declared tier to pin/provenance/acceptance metadata and document the
+  weaker Intel guarantee. See `docs/verification-policy.md`.
 - Published v0.1.1 signing/integrity and the owner's explicit MIT grant are
   reviewed. Its exact pin includes separate immutable licensing provenance
   and complete dependency/runtime notices; preserve all of them when bundling.
@@ -57,8 +61,7 @@ tags, bounded bump semantics and fail-closed acceptance/signing. An independentl
 versioned upstream CLI must not be rewritten by component version bumps.
 The signed/notarized/stapled outer DMG path must preserve the CLI signature.
 
-Report actual architecture/tool/artifact/revision evidence. The two compiler
-targets retain generic x86_64 code for Windows and a macOS ARM64 library, not
-Intel macOS support. Apple Silicon host checks do not establish Windows 4D,
-Auth0/browser/MFA, Dependency
+Report actual architecture/tool/artifact/revision evidence. Dual-target
+compilation is not native execution on both architectures. Apple Silicon host
+checks do not establish native Intel/Windows 4D, Auth0/browser/MFA, Dependency
 Manager installation or 4D Client/Server authentication.

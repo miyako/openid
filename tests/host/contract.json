@@ -11,10 +11,6 @@
       {"path": "/nativeVersion/version", "matches": "[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.\\-]+)?"},
       {"path": "/unicodeIdentity/identity/subject", "equals": "日本語"},
       {"path": "/invalidOwnerRejected", "equals": true},
-      {"path": "/macOSArchitectureGuard", "length": 5, "each": [
-        {"path": "", "equals": true}
-      ]},
-      {"path": "/legacyMacOSTarget/error/code", "equals": "unsupported_architecture"},
       {"path": "/invalidConfigurations", "length": 6, "each": [
         {"path": "/ok", "equals": false},
         {"path": "/error/code", "equals": "invalid_configuration"}
@@ -61,9 +57,6 @@
       {"path": "/missing/error/code", "equals": "missing_executable"},
       {"path": "/missing/exitCode", "absent": true},
       {"path": "/launch/error/code", "equals": "launch_failed"},
-      {"path": "/rejectedTimeouts", "length": 3, "each": [
-        {"path": "/error/code", "equals": "invalid_argument"}
-      ]},
       {"path": "/rejectedArguments", "length": 9, "each": [
         {"path": "/error/code", "equals": "invalid_argument"}
       ]},

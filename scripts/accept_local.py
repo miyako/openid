@@ -9,11 +9,11 @@ import subprocess
 import sys
 
 from build_cli import build, native_target, smoke_test
-from build_provenance import commit, sha256
-from ci_config import ROOT, TARGETS, assemble, load_config, require_tool4d_host, targets
+from build_provenance import commit, sha256, verify
+from ci_config import ROOT, TARGETS, assemble, load_config, require_tool4d_host
 from compile_component import compile_component
 from doctor import doctor
-from package_component import package, resource_architectures, unpack_for_test, validate_resources
+from package_component import package, unpack_for_test, validate_resources
 from test_4d import test_4d
 
 
@@ -46,13 +46,6 @@ def accept(root, repository, tool4d, cross=False):
     try:
         config = load_config(root, initialized=True, repository=repository)
         report["configuration"] = config
-        external = config.get("cli_source") == "external-oidc-cli-v1"
-        if external:
-            for name in ("cli_build_macos-x64", "cli_test_macos-x64", "cli_rosetta"):
-                del report["steps"][name]
-            report["steps"]["native_intel_4d"] = {"status": "unsupported", "reason": "Intel macOS is unsupported"}
-            if cross:
-                raise ValueError("external CLI acquisition is native-only; no cross mode")
         report["doctor"] = doctor(root, tool4d)
         require_tool4d_host()
         if not Path(tool4d).is_file():
@@ -63,22 +56,22 @@ def accept(root, repository, tool4d, cross=False):
             raise ValueError("tool4d --version produced no version text; compiler identity is unverified")
         report["tool4d"] = {"version": version.stdout.strip(), "binary_sha256": sha256(tool4d)}
         native = native_target()
-        if native not in targets(config):
-            raise ValueError("native host is unsupported by the configured CLI profile")
         def run(arguments):
             environment = os.environ.copy()
-            environment["TEST_CLI_LANGUAGE"] = "external" if external else config["language"]
+            environment["TEST_CLI_LANGUAGE"] = config["language"]
             subprocess.run(arguments, cwd=root, env=environment, check=True, timeout=900)
         step("unit", lambda: run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"]))
         step("icons", lambda: run([sys.executable, "scripts/generate_icons.py", "--check"]))
-        selected_targets = targets(config) if cross else (native,)
-        for target in selected_targets:
-            step("cli_build_" + target, lambda target=target: build(root, target, cross=cross))
+        targets = TARGETS if cross else (native,)
+        for target in targets:
+            executable = step("cli_build_" + target, lambda target=target: build(root, target, cross=cross))
             report["steps"]["cli_test_" + target] = (
                 {"status": "passed"} if target == native else
                 {"status": "not_run", "reason": "cross-built only; not executed on its native OS"})
+            if config.get("cli_source") == "external-oidc-cli-v1":
+                report["steps"]["cli_test_" + target]["details"] = verify(root, target, executable)
             save()
-        if native == "macos-arm64" and "macos-x64" in selected_targets:
+        if native == "macos-arm64" and "macos-x64" in targets:
             probe = subprocess.run(["arch", "-x86_64", "/usr/bin/true"], capture_output=True)
             if probe.returncode == 0:
                 step("cli_rosetta", lambda: smoke_test(root / "build/macos-x64" / config["cli"],
@@ -88,8 +81,7 @@ def accept(root, repository, tool4d, cross=False):
         # Existing manifests are accepted only when bound to current source and commit.
         step("assembly", lambda: assemble(root))
         component = root / "component" / config["repository"]
-        validate_resources(component, config["cli"],
-                           macos_architectures=resource_architectures(config))
+        validate_resources(component, config["cli"])
         def dependencies():
             result = subprocess.run(["otool", "-L", str(component / "Resources/bin/macOS" / config["cli"])],
                                     capture_output=True, text=True, check=True)
@@ -112,10 +104,7 @@ def accept(root, repository, tool4d, cross=False):
             raise ValueError("final archive changed during host acceptance")
         report["finished"] = True
         report["finished_at"] = datetime.now(timezone.utc).isoformat()
-        report["reason"] = (
-            "Local package verified; Intel macOS unsupported; hosted/native Windows4D/release/signing remain separate observations"
-            if external else
-            "Local package verified; hosted/native Intel4D/Windows4D/release/signing remain separate observations")
+        report["reason"] = "Local package verified; hosted/native Intel4D/Windows4D/release/signing remain separate observations"
         save()
         evidence = archive.with_suffix(".acceptance.json")
         if evidence.is_symlink():

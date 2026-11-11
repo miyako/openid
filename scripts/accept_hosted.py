@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 from build_provenance import commit, sha256, verify
-from ci_config import ROOT, TARGETS, assemble, load_config, require_tool4d_host, targets
+from ci_config import ROOT, TARGETS, assemble, load_config, require_tool4d_host
 from compile_component import compile_component
 from package_component import package, unpack_for_test, validate_compile
 from release_assets import require_desktop_evidence, verify_signing_proof
@@ -52,9 +52,6 @@ def accept(root, repository, tool4d, tag=None, require_apple_signing=False):
         config = load_config(root, initialized=True, repository=repository, tag=tag)
         report["configuration"] = config
         external = config.get("cli_source") == "external-oidc-cli-v1"
-        if external:
-            del report["steps"]["cli_test_macos-x64"]
-            report["steps"]["native_intel_4d"] = {"status": "unsupported", "reason": "Intel macOS is unsupported"}
         require_apple_signing = require_apple_signing or external or release_policy(root)
 
         def host(component=None):
@@ -69,7 +66,7 @@ def accept(root, repository, tool4d, tag=None, require_apple_signing=False):
         if not version.stdout.strip():
             raise ValueError("tool4d version is unverified")
         report["tool4d"] = {"version": version.stdout.strip(), "binary_sha256": sha256(tool)}
-        for target in targets(config):
+        for target in TARGETS:
             executable = root / "build" / target / (config["cli"] + (
                 ".exe" if target == "windows-x64" else ""))
             manifest = verify(root, target, executable)
@@ -127,9 +124,7 @@ def accept(root, repository, tool4d, tag=None, require_apple_signing=False):
                 raise ValueError("final asset changed during host acceptance: " + asset.name)
         report.update(result="partial", finished=True,
                       finished_at=datetime.now(timezone.utc).isoformat(),
-                      reason=("Verified package; Intel macOS unsupported; native Windows 4D and published download remain separate checks"
-                              if external else
-                              "Verified package; native Intel/Windows 4D and published download remain separate checks"))
+                      reason="Verified package; native Intel/Windows 4D and published download remain separate checks")
         save()
         evidence = archive.with_suffix(".acceptance.json")
         if any(path.is_symlink() for path in (evidence, *evidence.parents)):

@@ -30,8 +30,6 @@ CONTRACT = {
     "execution": {
         "successPaths": ["/fileArgument", "/folderArgument"],
         "assertions": [
-            {"path": "/rejectedTimeouts", "length": 3,
-             "each": [{"path": "/error/code", "equals": "invalid_argument"}]},
             {"path": "/rejectedArguments", "length": 9,
              "each": [{"path": "/result", "equals": _REJECTED}]},
             {"path": "/rejectedNul", "length": 3,
@@ -107,38 +105,6 @@ class ContractTests(unittest.TestCase):
             self.assertIs(runner.validate_status(status, CONTRACT, compiled), status)
             with self.assertRaises(ValueError):
                 runner.validate_status(status, CONTRACT, not compiled)
-
-    def test_arm64_architecture_guards_are_required_in_both_host_modes(self):
-        actual = json.loads((ROOT / "tests/host/contract.json").read_text())
-        guards = [assertion for assertion in actual["feature"]["assertions"]
-                  if assertion["path"] in {
-                      "/macOSArchitectureGuard", "/legacyMacOSTarget/error/code"}]
-        self.assertEqual(len(guards), 2)
-        contract = copy.deepcopy(CONTRACT)
-        contract["feature"]["assertions"].extend(guards)
-        for compiled in (False, True):
-            status = valid_status(compiled)
-            status["macOSArchitectureGuard"] = [True] * 5
-            status["legacyMacOSTarget"] = {
-                "ok": False, "error": {"code": "unsupported_architecture"}}
-            runner.validate_status(status, contract, compiled)
-            for value in (None, [], [True] * 4, [True] * 6,
-                          [True, True, True, True, False],
-                          [True, True, True, True, 1],
-                          [True, True, True, True, "true"]):
-                invalid = copy.deepcopy(status)
-                invalid["macOSArchitectureGuard"] = value
-                with self.subTest(compiled=compiled, value=value), self.assertRaises(ValueError):
-                    runner.validate_status(invalid, contract, compiled)
-            for key in ("macOSArchitectureGuard", "legacyMacOSTarget"):
-                invalid = copy.deepcopy(status)
-                del invalid[key]
-                with self.subTest(compiled=compiled, missing=key), self.assertRaises(ValueError):
-                    runner.validate_status(invalid, contract, compiled)
-            invalid = copy.deepcopy(status)
-            invalid["legacyMacOSTarget"]["error"]["code"] = "missing_executable"
-            with self.subTest(compiled=compiled), self.assertRaises(ValueError):
-                runner.validate_status(invalid, contract, compiled)
 
     def test_completion_must_be_literal_true_and_mode_literal_boolean(self):
         for key in ("success", "finished", "compiled"):
@@ -226,27 +192,6 @@ class ContractTests(unittest.TestCase):
             status[path]["exitCode"] = 0
             with self.assertRaises(ValueError):
                 runner.validate_status(status, CONTRACT, False)
-
-    def test_all_three_invalid_process_timeouts_require_explicit_rejections(self):
-        for compiled in (False, True):
-            status = valid_status(compiled)
-            self.assertEqual(status["rejectedTimeouts"], [
-                {"error": {"code": "invalid_argument"}} for _ in range(3)])
-            for value in (None, [], status["rejectedTimeouts"][:2],
-                          [*status["rejectedTimeouts"], {"error": {"code": "invalid_argument"}}]):
-                invalid = copy.deepcopy(status)
-                invalid["rejectedTimeouts"] = value
-                with self.subTest(compiled=compiled, value=value), self.assertRaises(ValueError):
-                    runner.validate_status(invalid, CONTRACT, compiled)
-            invalid = copy.deepcopy(status)
-            del invalid["rejectedTimeouts"]
-            with self.assertRaises(ValueError):
-                runner.validate_status(invalid, CONTRACT, compiled)
-            for index in range(3):
-                invalid = copy.deepcopy(status)
-                invalid["rejectedTimeouts"][index]["error"]["code"] = "launch_failed"
-                with self.subTest(compiled=compiled, index=index), self.assertRaises(ValueError):
-                    runner.validate_status(invalid, CONTRACT, compiled)
 
     def test_malformed_boolean_protocol_results_require_error_and_retained_status(self):
         for index in range(2):

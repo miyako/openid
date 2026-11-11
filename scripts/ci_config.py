@@ -90,19 +90,14 @@ def load_config(root=ROOT, *, initialized=False, repository=None, tag=None):
     return config
 
 
-def targets(config):
-    return (("macos-arm64", "windows-x64")
-            if config.get("cli_source") == "external-oidc-cli-v1" else TARGETS)
-
-
 def matrix(config):
     if not config["initialized"]:
         return {"include": []}
-    runners = {"macos-x64": "macos-15-intel", "macos-arm64": "macos-15", "windows-x64": "windows-2022"}
+    runners = ("macos-15-intel", "macos-15", "windows-2022")
     return {"include": [
-        {"target": target, "runner": runners[target],
+        {"target": target, "runner": runner,
          "language": "external" if config.get("cli_source") == "external-oidc-cli-v1" else config["language"]}
-        for target in targets(config)
+        for target, runner in zip(TARGETS, runners)
     ]}
 
 
@@ -115,21 +110,23 @@ def assemble(root=ROOT):
         raise ValueError("resource assembly destination must not traverse symlinks")
     mac = destination / "macOS" / config["cli"]
     windows = destination / "Windows" / (config["cli"] + ".exe")
-    inputs = {target: root / "build" / target / (
-        config["cli"] + (".exe" if target == "windows-x64" else "")) for target in targets(config)}
-    if not all(path.is_file() and not path.is_symlink() for path in inputs.values()):
-        raise ValueError("all supported native build artifacts are required")
-    for target, path in inputs.items():
+    inputs = [root / "build" / target / (config["cli"] + (".exe" if target == "windows-x64" else ""))
+              for target in TARGETS]
+    if not all(path.is_file() and not path.is_symlink() for path in inputs):
+        raise ValueError("all three native build artifacts are required")
+    for target, path in zip(TARGETS, inputs):
         verify(root, target, path)
     mac.parent.mkdir(parents=True, exist_ok=True)
     windows.parent.mkdir(parents=True, exist_ok=True)
     if config.get("cli_source") == "external-oidc-cli-v1":
         from external_cli import verify_binary, load_pin
         release = load_pin(root)
-        for target, path in inputs.items():
+        if inputs[0].read_bytes() != inputs[1].read_bytes():
+            raise ValueError("both macOS jobs must retain identical signed universal bytes")
+        for target, path in zip(TARGETS, inputs):
             verify_binary(root, path, target)
-        shutil.copy2(inputs["macos-arm64"], mac)
-        shutil.copy2(inputs["windows-x64"], windows)
+        shutil.copy2(inputs[0], mac)
+        shutil.copy2(inputs[2], windows)
         # Actions artifacts drop POSIX modes; restore the reviewed archive's 0755.
         mac.chmod(0o755)
         windows.chmod(0o755)
@@ -138,11 +135,10 @@ def assemble(root=ROOT):
             output.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(root / notice["path"], output)
         return destination
-    subprocess.run(["lipo", "-create", str(inputs["macos-x64"]), str(inputs["macos-arm64"]),
-                    "-output", str(mac)], check=True)
+    subprocess.run(["lipo", "-create", str(inputs[0]), str(inputs[1]), "-output", str(mac)], check=True)
     subprocess.run(["lipo", str(mac), "-verify_arch", "x86_64", "arm64"], check=True)
     mac.chmod(0o755)
-    shutil.copyfile(inputs["windows-x64"], windows)
+    shutil.copyfile(inputs[2], windows)
     windows.chmod(0o755)
     return destination
 

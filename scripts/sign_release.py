@@ -366,8 +366,7 @@ def prepare_payload(root, scratch, config, unsigned):
     payload.mkdir()
     staged = payload / unpacked.name
     shutil.copytree(unpacked, staged)
-    package_component.validate_resources(
-        staged, config["cli"], macos_architectures=package_component.resource_architectures(config))
+    package_component.validate_resources(staged, config["cli"])
     return payload, staged
 
 
@@ -478,8 +477,7 @@ def zip_from_mount(commands, dmg, scratch, staged, signed_paths, secrets, config
         mounted = mount / staged.name
         after = snapshot(mounted)
         assert_immutable(snapshot(staged), after)
-        package_component.validate_resources(
-            mounted, config["cli"], macos_architectures=package_component.resource_architectures(config))
+        package_component.validate_resources(mounted, config["cli"])
         for relative in signed_paths:
             signature(commands, mounted / relative, secrets["NOTARYTOOL_TEAM_ID"],
                       architectures=macho_architectures(mounted / relative))
@@ -518,8 +516,7 @@ def sign_release(root=ROOT, env=None, *, require_apple_signing=False):
         raise SigningError("sign requires the source commit RELEASE_SHA or GITHUB_SHA")
     component = root / "component" / config["repository"]
     package_component.validate_compile(root, component, config["repository"])
-    package_component.validate_resources(
-        component, config["cli"], macos_architectures=package_component.resource_architectures(config))
+    package_component.validate_resources(component, config["cli"])
     unsigned = root / "dist" / (config["repository"] + ".zip")
     if not unsigned.is_file() or unsigned.is_symlink():
         raise SigningError("fresh unsigned compiled ZIP is required")
@@ -551,8 +548,7 @@ def sign_release(root=ROOT, env=None, *, require_apple_signing=False):
                 signature(commands, path, secrets["NOTARYTOOL_TEAM_ID"],
                           architectures=macho_architectures(path))
             assert_immutable(before, snapshot(staged), relative_paths)
-            package_component.validate_resources(
-                staged, config["cli"], macos_architectures=package_component.resource_architectures(config))
+            package_component.validate_resources(staged, config["cli"])
             dmg = scratch / (config["repository"] + ".dmg")
             commands.run("DMG create", [
                 HDIUTIL, "create", "-srcfolder", payload, "-volname", config["repository"],

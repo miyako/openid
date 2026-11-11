@@ -56,14 +56,12 @@ def verify(root, target, executable):
             or status.get("commit") != commit(root) or status.get("binary_sha256") != sha256(executable)):
         raise ValueError("stale or mixed-source CLI build manifest: " + target)
     if json.loads((Path(root) / "template.json").read_text()).get("cli_source") == "external-oidc-cli-v1":
-        from external_cli import asset_key, load_pin, verify_binary, PROFILE, REPOSITORY
-        key = asset_key(target)
+        from external_cli import load_pin, release_provenance, verify_binary, PROFILE
         release = load_pin(root)
-        if (status.get("toolchain") != PROFILE or status.get("external") != {
-                "repository": REPOSITORY, "tag": release["tag"],
-                "archive_sha256": release["assets"][key]["sha256"], "release_eligible": True}):
+        if (status.get("toolchain") != PROFILE
+                or status.get("external") != release_provenance(release, target)):
             raise ValueError("missing reviewed release provenance; development artifacts are ineligible")
-        if type(status.get("schema")) is not int or status["schema"] != 1 or status.get("execution") != "passed":
-            raise ValueError("external CLI requires native execution evidence: " + target)
+        if status.get("execution") != "passed":
+            raise ValueError("external CLI requires native execution evidence")
         verify_binary(root, executable, target)
     return status

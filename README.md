@@ -13,11 +13,13 @@ complete [redistribution notices](docs/redistribution.md) are pinned and bundled
 Existing unsigned `v0.1.0` / `v0.1.0-rc.2` assets remain unacceptable. No runtime
 download, PATH lookup, quarantine removal or unsigned fallback is performed.
 
-Supported targets are **native macOS ARM64** and **Windows x64**. Intel macOS
-and Rosetta are explicitly unsupported in this first release. Intel was
-deferred after independent CI could not satisfy Apple's online `notarized`
-requirement; the cause remains unestablished. This is a documented scope
-reduction, not a bypass of signing/notarization checks; see [acceptance](docs/acceptance.md).
+The owner prefers **universal macOS** support with an explicit
+[platform verification policy](docs/verification-policy.md). Native ARM64
+builds require the online notarized check. Native Intel builds retain strict
+Developer ID/all-slice verification and the pinned Accepted upstream receipt,
+but do **not** perform that independent online requirement. This is a declared
+compatibility exception, not evidence that the Intel check passes or a
+Gatekeeper/quarantined-download guarantee.
 
 ## Desktop API
 
@@ -29,7 +31,7 @@ untrusted caller. Preserve the issuer exactly, including its trailing slash.
 Form.oidc:=cs.OpenID.Client.new(New object(\
     "issuer"; "https://YOUR-TENANT.auth0.com/"; \
     "client_id"; "YOUR_PUBLIC_CLIENT_ID"; \
-    "listen_address"; "127.0.0.1:42813"); "macOS-arm64")
+    "listen_address"; "127.0.0.1:42813"); "macOS-universal")
 
 // Login button: returns immediately; no UI wait()
 Form.login:=Form.oidc.authenticate()
@@ -55,8 +57,9 @@ End if
 ```
 
 Select `"Windows-x64"` explicitly on Windows. Windows ARM64 is unsupported.
-macOS resources contain the upstream signed ARM64-only executable; do not
-reassemble or re-sign it. The former `"macOS-universal"` target is rejected.
+macOS resources contain a signed universal executable; do not lipo or re-sign it.
+The temporary `macOS-arm64` selector is not supported; use `macOS-universal`
+or its macOS default.
 See [Client](component/openid/Documentation/Classes/Client.md) and
 [Task](component/openid/Documentation/Classes/Task.md).
 
@@ -110,10 +113,9 @@ upstream [protocol](https://github.com/miyako/oidc-cli/blob/main/docs/protocol.m
 Local macOS ARM64 tool4d 20.7/101905 executed the source and unpacked compiled
 development component, including real async version, active cancellation,
 CLI timeout, owner exit and zero leaked workers. Both compiler targets passed.
-The earlier full compiled-package run used an approved signed/notarized
-**universal CI artifact**, not the current ARM64-only release pin. Current
-ARM64-only acceptance scope is recorded separately in [acceptance](docs/acceptance.md).
-The generic x86_64 4D compiler target is retained for Windows x64; it is not
-an Intel macOS support claim. Windows 4D execution, normal IDE UI
-responsiveness, Auth0/browser/MFA and downloaded-release acceptance remain
-separate observations.
+That earlier full compiled-package run used the approved signed/notarized
+**CI artifact**, not v0.1.1. The source host and both compile targets have since
+passed with the licensed v0.1.1 resources. Current universal-policy acceptance
+is recorded separately in [acceptance](docs/acceptance.md); historical package
+evidence must not be relabeled. These checks do not establish Intel/Windows 4D execution,
+normal IDE UI responsiveness, Auth0/browser/MFA or downloaded-release acceptance.

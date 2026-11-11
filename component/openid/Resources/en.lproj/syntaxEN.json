@@ -506,22 +506,6 @@
 			],
 			"Summary": ""
 		},
-		"supportsMacOS()": {
-			"Syntax": "**.supportsMacOS**( *probe* : Object )->supported : Boolean",
-			"Params": [
-				[
-					"probe",
-					"Object",
-					"->"
-				],
-				[
-					"supported",
-					"Boolean",
-					"<-"
-				]
-			],
-			"Summary": ""
-		},
 		"get compiled()": {
 			"Syntax": "**.get compiled**()->compiled : Boolean",
 			"Params": [
@@ -586,7 +570,7 @@
 	},
 	"_Process": {
 		"execute()": {
-			"Syntax": "**.execute**( *file* : 4D.File; *arguments* : Collection; *timeout* : Real )->result : Object",
+			"Syntax": "**.execute**( *file* : 4D.File; *arguments* : Collection )->result : Object",
 			"Params": [
 				[
 					"file",
@@ -596,11 +580,6 @@
 				[
 					"arguments",
 					"Collection",
-					"->"
-				],
-				[
-					"timeout",
-					"Real",
 					"->"
 				],
 				[

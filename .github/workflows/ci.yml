@@ -64,11 +64,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Selected CLI contract tests
-        run: python -m unittest discover -s tests -p test_cli.py -v
       - name: Acquire reviewed external binary and verify native protocol
         run: python scripts/external_cli.py acquire --target "$CLI_TARGET"
         shell: bash
+      - name: Selected CLI contract tests
+        run: python -m unittest discover -s tests -p test_cli.py -v
       - uses: actions/upload-artifact@v4
         with:
           name: cli-${{ matrix.target }}
@@ -92,13 +92,17 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
+          name: cli-macos-x64
+          path: build/macos-x64
+      - uses: actions/download-artifact@v4
+        with:
           name: cli-macos-arm64
           path: build/macos-arm64
       - uses: actions/download-artifact@v4
         with:
           name: cli-windows-x64
           path: build/windows-x64
-      - name: Assemble signed ARM64 macOS and x64 Windows resources
+      - name: Assemble universal macOS and x64 Windows resources
         id: assemble
         run: python scripts/ci_config.py assemble
       - uses: actions/upload-artifact@v4

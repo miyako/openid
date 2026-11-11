@@ -33,7 +33,7 @@ HOST_StatusFile:=$statusFile
 HOST_Phase:="starting"
 HOST_PreviousHandler:=Method called on error(ek local)
 ON ERR CALL("Host_error"; ek local)
-$target:="macOS-arm64"
+$target:="macOS-universal"
 If (Is Windows)
 	$target:="Windows-x64"
 End if
@@ -41,13 +41,6 @@ $configuration:=New object("issuer"; "https://issuer.example"; "client_id"; "pub
 $statusFile.setText("{\"phase\":\"client-constructor\",\"success\":false,\"finished\":false}")
 $tool:=cs.OpenID.Client.new($configuration; $target)
 $report:=New object("success"; True; "finished"; False; "compiled"; $tool.compiled; "cases"; New collection)
-$report.macOSArchitectureGuard:=New collection(\
-	cs.OpenID._CLI.new("oidc-cli"; $target).supportsMacOS(New object("ok"; True; "exitCode"; 0; "stdout"; "arm64\n"; "stderr"; "")); \
-	Not(cs.OpenID._CLI.new("oidc-cli"; $target).supportsMacOS(New object("ok"; True; "exitCode"; 0; "stdout"; "x86_64\n"; "stderr"; ""))); \
-	Not(cs.OpenID._CLI.new("oidc-cli"; $target).supportsMacOS(New object("ok"; False; "exitCode"; 1; "stdout"; "arm64\n"; "stderr"; ""))); \
-	Not(cs.OpenID._CLI.new("oidc-cli"; $target).supportsMacOS(New object)); \
-	Not(cs.OpenID._CLI.new("oidc-cli"; $target).supportsMacOS(New object("ok"; True; "exitCode"; 0; "stdout"; "arm64\n"; "stderr"; "unexpected"))))
-$report.legacyMacOSTarget:=cs.OpenID._CLI.new("oidc-cli"; "macOS-universal").resolve()
 HOST_Phase:="native renamed executable"
 $report.renamedExecutable:=cs.OpenID._Process.new().execute($executable; New collection("version"))
 HOST_Phase:="asynchronous version"
@@ -211,10 +204,6 @@ End if
 HOST_Phase:="missing resource"
 $report.unsupported:=cs.OpenID._CLI.new("oidc-cli"; "invalid-platform").resolve()
 $report.missing:=cs.OpenID._CLI.new("missing-cli"; $target).resolve()
-$report.rejectedTimeouts:=New collection
-For each ($invalid; New collection(-1; 0; 31))
-	$report.rejectedTimeouts.push(cs.OpenID._Process.new().execute($executable; New collection("version"); $invalid))
-End for each
 HOST_Phase:="generic argument rejection"
 $report.rejectedArguments:=New collection
 For each ($invalid; New collection(123; 1.25; True; False; Null; Current date; Current time; New collection; New object))

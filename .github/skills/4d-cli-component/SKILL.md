@@ -9,8 +9,6 @@ Read `AGENTS.md`, `README.md`, `template.json`, component class docs and the
 relevant scripts/tests before changes. This destination is already initialized:
 repository/component/project/catalog/package `openid`, namespace `OpenID`,
 external CLI `oidc-cli`. Do not reinitialize or add a native CLI starter.
-Deployment is macOS ARM64 plus Windows x64; Intel macOS and Rosetta are
-unsupported. Use `macOS-arm64`, never the former `macOS-universal` selector.
 
 The separately maintained upstream owns OIDC discovery, browser, PKCE,
 state/nonce, callback, token exchange and validation. This wrapper validates
@@ -23,6 +21,12 @@ builder. Exact release/version/archive hashes and notarization receipt are
 mandatory; an unresolved production pin stops packaging. Explicitly approved
 development CI artifacts do not become release pins. Preserve signed bytes
 and executable mode; no re-sign/lipo/quarantine-removal/unsigned fallback.
+Universal macOS uses the explicitly reviewed native-host policy: ARM64 requires
+online notarization, while actual native Intel omits only that requirement and
+retains strict all-slice Developer ID/team/runtime/timestamps plus the pinned
+Accepted upstream receipt. Record Intel online status as not run by policy,
+never passed. No caller override, silent fallback or Rosetta-as-native evidence.
+See `docs/verification-policy.md`; outer DMG notarization remains mandatory.
 
 Keep Client/Task UI calls nonblocking. Each attempt uses CALL WORKER with
 isolated shared cancellation state and a bounded SystemWorker owned there.
@@ -45,7 +49,7 @@ signed/notarized/stapled DMG packaging must preserve the CLI signature.
 Missing required evidence fails, never downgrades. Do not dispatch publication,
 merge, tag or access secret values without separate authorization.
 
-Report actual passed/failed/not_run scope. The generic x86_64 compiler target
-is retained for Windows, not Intel macOS support. macOS ARM64 fixtures do not establish Windows 4D,
+Report actual passed/failed/not_run scope. Dual-target compilation is not
+native Intel execution; macOS ARM64 fixtures do not establish Windows 4D,
 interactive Auth0/MFA or Dependency Manager installation. Synthetic identity
 protocol fixtures are not real-provider E2E or transaction-bound 4D Server login.

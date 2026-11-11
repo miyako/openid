@@ -18,6 +18,11 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = "external-oidc-cli-v1"
 REPOSITORY = "miyako/oidc-cli"
+VERIFICATION_POLICIES = {
+    "macos-x64": "native-intel-accepted-receipt-v1",
+    "macos-arm64": "native-arm64-online-notarized-v1",
+    "windows-x64": "native-windows-integrity-v1",
+}
 DEV_VERSION = "0.0.0-signing-check"
 DEV_SHA = "27dd05ce90c0ecf0487a99d0e030e9d3a89ef37d"
 DEV_DIGESTS = {
@@ -106,21 +111,19 @@ def load_pin(root=ROOT):
     checked_hash(release.get("receipt_sha256"))
     if not re.fullmatch(r"[A-Z0-9]{10}", release.get("apple_team_id", "")):
         raise ValueError("reviewed Developer ID team required")
+    if release.get("verification_policy") != VERIFICATION_POLICIES:
+        raise ValueError("exact reviewed per-native-target verification policy required")
     assets = release.get("assets", {})
     if not isinstance(assets, dict):
         raise ValueError("reviewed platform assets must be an object")
-    if set(assets) != {"macos", "windows-x64"}:
-        raise ValueError("only macOS ARM64 and Windows x64 assets are supported")
-    for target, suffix in (("macos", "darwin_arm64.tar.gz"), ("windows-x64", "windows_amd64.zip")):
+    for target, suffix in (("macos", "darwin_universal.tar.gz"), ("windows-x64", "windows_amd64.zip")):
         asset = assets.get(target, {})
         if not isinstance(asset, dict):
             raise ValueError("reviewed archive must be an object")
         if asset.get("name") != "oidc-cli_" + version + "_" + suffix:
-            raise ValueError("exact ARM64 macOS / Windows x64 archive required")
+            raise ValueError("exact universal macOS / Windows x64 archive required")
         checked_hash(asset.get("sha256"))
         checked_hash(asset.get("binary_sha256"))
-    if assets["macos"].get("architectures") != ["arm64"]:
-        raise ValueError("macOS release must explicitly require ARM64 only")
     licenses = release.get("licenses")
     if (not isinstance(licenses, list) or not licenses
             or {notice.get("kind") for notice in licenses if isinstance(notice, dict)}
@@ -176,7 +179,7 @@ def extract(archive, output, expected_hash):
     return output
 
 
-def receipt_check(path, binary, expected_hash, key="darwin_arm64"):
+def receipt_check(path, binary, expected_hash, key="darwin_universal"):
     if digest(regular(path)) != checked_hash(expected_hash):
         raise ValueError("notarization receipt SHA256 mismatch")
     receipt = json_object(path.read_text())
@@ -189,31 +192,58 @@ def receipt_check(path, binary, expected_hash, key="darwin_arm64"):
         raise ValueError("notarization receipt does not bind accepted binary")
 
 
-def signature_check(binary, team=None, architectures=("arm64",)):
-    """Verify ARM64 releases; universal is an explicit historical development opt-in."""
-    if architectures not in (("arm64",), ("x86_64", "arm64")):
-        raise ValueError("unsupported macOS architecture profile")
+def verification_evidence(target):
+    """Expected acquisition evidence, never a substitute for performing the checks."""
+    if target not in VERIFICATION_POLICIES:
+        raise ValueError("unsupported external CLI verification target")
+    windows = target == "windows-x64"
+    return {
+        "policy": VERIFICATION_POLICIES[target],
+        "signature": "not_applicable" if windows else "passed",
+        "accepted_receipt": "not_applicable" if windows else "passed",
+        "online_notarization": ("not_applicable" if windows else
+                                "passed" if target == "macos-arm64" else "not_run"),
+    }
+
+
+def release_provenance(release, target):
+    verification = verification_evidence(target)
+    key = "windows-x64" if target == "windows-x64" else "macos"
+    return {"repository": REPOSITORY, "tag": release["tag"],
+            "archive_sha256": release["assets"][key]["sha256"], "release_eligible": True,
+            "verification": verification}
+
+
+def signature_check(binary, team=None, *, production=False):
     if platform.system() != "Darwin":
         raise ValueError("Apple signature verification requires macOS")
+    if type(production) is not bool:
+        raise ValueError("explicit production signature profile required")
+    native = None
+    if production:
+        from build_cli import native_target
+        native = native_target()
+        if native not in ("macos-x64", "macos-arm64"):
+            raise ValueError("native macOS signature verification required")
+    online = not production or native == "macos-arm64"
+    arguments = ["codesign", "--verify", "--strict", "--all-architectures", "--verbose=4"]
+    if online:
+        arguments += ["--check-notarization", "--test-requirement", "=notarized"]
     for attempt in range(4):
         try:
-            subprocess.run(["codesign", "--verify", "--strict", "--all-architectures", "--verbose=4",
-                            "--check-notarization", "--test-requirement", "=notarized", str(binary)],
+            subprocess.run([*arguments, str(binary)],
                            check=True, capture_output=False, timeout=120)
             break
         except subprocess.CalledProcessError as error:
-            if error.returncode != 3 or attempt == 3:
+            if not online or error.returncode != 3 or attempt == 3:
                 raise
             print("Apple notarization requirement not satisfied; retrying in 15 seconds "
                   f"(attempt {attempt + 2}/4)", file=sys.stderr)
             time.sleep(15)
-    result = subprocess.run(["lipo", "-archs", str(binary)],
-                            check=True, capture_output=True, text=True, timeout=20)
-    actual = result.stdout.split()
-    if len(actual) != len(architectures) or set(actual) != set(architectures):
-        raise ValueError("macOS binary architectures differ from required profile")
+    subprocess.run(["lipo", str(binary), "-verify_arch", "x86_64", "arm64"],
+                   check=True, capture_output=True, timeout=20)
     teams = set()
-    for arch in architectures:
+    for arch in ("x86_64", "arm64"):
         result = subprocess.run(["codesign", "--display", "--verbose=4", "--arch", arch, str(binary)],
                                 check=True, capture_output=True, text=True, timeout=20)
         display = result.stdout + result.stderr
@@ -227,6 +257,10 @@ def signature_check(binary, team=None, architectures=("arm64",)):
         teams.add(match[1])
     if len(teams) != 1:
         raise ValueError("universal slices must share Developer ID team")
+    if production:
+        evidence = verification_evidence(native)
+        del evidence["accepted_receipt"]
+        return evidence
 
 
 def version_check(binary, version):
@@ -256,20 +290,15 @@ def fetch(url, path):
         destination(path).write_bytes(response.read(128 * 1024 * 1024 + 1))
 
 
-def asset_key(target):
-    if target not in {"macos-arm64", "windows-x64"}:
-        raise ValueError("only macos-arm64 and windows-x64 targets are supported")
-    return "macos" if target == "macos-arm64" else "windows-x64"
-
-
 def acquire(root, target):
     from build_provenance import record
     from build_cli import native_target
     root = Path(root)
-    key = asset_key(target)
+    verification = verification_evidence(target)
     release = load_pin(root)
     if target != native_target():
         raise ValueError("acquisition/version evidence requires the native target")
+    key = "windows-x64" if target == "windows-x64" else "macos"
     asset = release["assets"][key]
     cache = root / "build/external-cli"
     base = f"https://github.com/{REPOSITORY}/releases/download/{release['tag']}/"
@@ -284,11 +313,15 @@ def acquire(root, target):
             receipt = cache / "APPLE_NOTARIZATION.json"
             fetch(base + receipt.name, receipt)
             receipt_check(receipt, binary, release["receipt_sha256"])
-            signature_check(binary, release["apple_team_id"])
+            verification = {
+                **signature_check(binary, release["apple_team_id"], production=True),
+                "accepted_receipt": "passed",
+            }
+            if verification != verification_evidence(target):
+                raise ValueError("signature verification host differs from acquisition target")
         version_check(binary, release["version"])
         status = record(root, target, binary, True, PROFILE)
-        status["external"] = {"repository": REPOSITORY, "tag": release["tag"],
-                              "archive_sha256": asset["sha256"], "release_eligible": True}
+        status["external"] = release_provenance(release, target)
         binary.with_name("build-manifest.json").write_text(json.dumps(status, indent=2) + "\n")
         return binary
     except Exception:
@@ -298,12 +331,13 @@ def acquire(root, target):
 
 
 def verify_binary(root, binary, target):
-    key = asset_key(target)
+    verification_evidence(target)
     release = load_pin(root)
+    key = "windows-x64" if target == "windows-x64" else "macos"
     if digest(regular(binary)) != release["assets"][key]["binary_sha256"]:
         raise ValueError("bundled CLI differs from reviewed signed upstream bytes")
     if key == "macos":
-        signature_check(binary, release["apple_team_id"])
+        signature_check(binary, release["apple_team_id"], production=True)
 
 
 def verify_bundle(root, archive, repository):
@@ -337,9 +371,8 @@ def dev_verify(root):
         dev_checksums(folder)
         archive_name = f"oidc-cli_{DEV_VERSION}_darwin_universal.tar.gz"
         extract(folder / archive_name, binary, DEV_DIGESTS[archive_name])
-        receipt_check(folder / "APPLE_NOTARIZATION.json", binary,
-                      DEV_DIGESTS["APPLE_NOTARIZATION.json"], key="darwin_universal")
-        signature_check(binary, architectures=("x86_64", "arm64"))
+        receipt_check(folder / "APPLE_NOTARIZATION.json", binary, DEV_DIGESTS["APPLE_NOTARIZATION.json"])
+        signature_check(binary)
         version_check(binary, DEV_VERSION)
         destination(folder / "verified/development-only.json").write_text(json.dumps({
             "release_eligible": False, "repository": REPOSITORY, "run_id": 43041282015,
@@ -355,7 +388,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("check-pin", "acquire", "verify-dev"))
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("--target", choices=("macos-arm64", "windows-x64"))
+    parser.add_argument("--target", choices=("macos-x64", "macos-arm64", "windows-x64"))
     args = parser.parse_args()
     try:
         if args.command == "check-pin":
