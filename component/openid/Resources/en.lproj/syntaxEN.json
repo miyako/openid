@@ -1,0 +1,644 @@
+{
+	"_method_": {},
+	"_Protocol": {
+		"decode()": {
+			"Syntax": "**.decode**( *stdout* : Text; *exit* : Variant; *command* : Text; *configuration* : Object )->result : Object",
+			"Params": [
+				[
+					"stdout",
+					"Text",
+					"->"
+				],
+				[
+					"exit",
+					"Variant",
+					"->"
+				],
+				[
+					"command",
+					"Text",
+					"->"
+				],
+				[
+					"configuration",
+					"Object",
+					"->"
+				],
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"failure()": {
+			"Syntax": "**.failure**( *code* : Text )->result : Object",
+			"Params": [
+				[
+					"code",
+					"Text",
+					"->"
+				],
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_JSON": {
+		"string()": {
+			"Syntax": "**.string**()->valid : Boolean",
+			"Params": [
+				[
+					"valid",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"hexUnit()": {
+			"Syntax": "**.hexUnit**()->value : Integer",
+			"Params": [
+				[
+					"value",
+					"Integer",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"array()": {
+			"Syntax": "**.array**( *depth* : Integer )->valid : Boolean",
+			"Params": [
+				[
+					"depth",
+					"Integer",
+					"->"
+				],
+				[
+					"valid",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"object()": {
+			"Syntax": "**.object**( *depth* : Integer )->valid : Boolean",
+			"Params": [
+				[
+					"depth",
+					"Integer",
+					"->"
+				],
+				[
+					"valid",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"whitespace()": {
+			"Syntax": "**.whitespace**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"value()": {
+			"Syntax": "**.value**( *depth* : Integer )->valid : Boolean",
+			"Params": [
+				[
+					"depth",
+					"Integer",
+					"->"
+				],
+				[
+					"valid",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"valid()": {
+			"Syntax": "**.valid**( *source* : Text )->valid : Boolean",
+			"Params": [
+				[
+					"source",
+					"Text",
+					"->"
+				],
+				[
+					"valid",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"size": {
+			"Syntax": "size : Integer"
+		},
+		"position": {
+			"Syntax": "position : Integer"
+		},
+		"source": {
+			"Syntax": "source : Text"
+		}
+	},
+	"_Config": {
+		"validate()": {
+			"Syntax": "**.validate**( *input* : Object; *command* : Text )->result : Object",
+			"Params": [
+				[
+					"input",
+					"Object",
+					"->"
+				],
+				[
+					"command",
+					"Text",
+					"->"
+				],
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"failure()": {
+			"Syntax": "**.failure**()->error : Object",
+			"Params": [
+				[
+					"error",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"cs.OpenID": {
+		"_Run": {
+			"new()": {
+				"Syntax": "**.new**()",
+				"Params": [],
+				"Summary": ""
+			}
+		},
+		"Task": {
+			"new()": {
+				"Syntax": "**.new**( *configuration* : Object; *target* : Text; *command* : Text )",
+				"Params": [
+					[
+						"configuration",
+						"Object",
+						"->"
+					],
+					[
+						"target",
+						"Text",
+						"->"
+					],
+					[
+						"command",
+						"Text",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		},
+		"Client": {
+			"new()": {
+				"Syntax": "**.new**( *configuration* : Object; *target* : Text )",
+				"Params": [
+					[
+						"configuration",
+						"Object",
+						"->"
+					],
+					[
+						"target",
+						"Text",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		},
+		"_CLI": {
+			"new()": {
+				"Syntax": "**.new**( *executableName* : Text; *target* : Text )",
+				"Params": [
+					[
+						"executableName",
+						"Text",
+						"->"
+					],
+					[
+						"target",
+						"Text",
+						"->"
+					]
+				],
+				"Summary": ""
+			}
+		}
+	},
+	"_Run": {
+		"finish()": {
+			"Syntax": "**.finish**( *result* : Object )",
+			"Params": [
+				[
+					"result",
+					"Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"emergency()": {
+			"Syntax": "**.emergency**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"onData()": {
+			"Syntax": "**.onData**( *worker* : Object; *event* : Object )",
+			"Params": [
+				[
+					"worker",
+					"Object",
+					"->"
+				],
+				[
+					"event",
+					"Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"onError()": {
+			"Syntax": "**.onError**( *worker* : Object; *event* : Object )",
+			"Params": [
+				[
+					"worker",
+					"Object",
+					"->"
+				],
+				[
+					"event",
+					"Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"onDataError()": {
+			"Syntax": "**.onDataError**( *worker* : Object; *event* : Object )",
+			"Params": [
+				[
+					"worker",
+					"Object",
+					"->"
+				],
+				[
+					"event",
+					"Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"run()": {
+			"Syntax": "**.run**( *state* : Object; *configuration* : Object; *target* : Text; *command* : Text; *owner* : Object )",
+			"Params": [
+				[
+					"state",
+					"Object",
+					"->"
+				],
+				[
+					"configuration",
+					"Object",
+					"->"
+				],
+				[
+					"target",
+					"Text",
+					"->"
+				],
+				[
+					"command",
+					"Text",
+					"->"
+				],
+				[
+					"owner",
+					"Object",
+					"->"
+				]
+			],
+			"Summary": ""
+		},
+		"started": {
+			"Syntax": "started : Real"
+		},
+		"owner": {
+			"Syntax": "owner : Object"
+		},
+		"command": {
+			"Syntax": "command : Text"
+		},
+		"failure": {
+			"Syntax": "failure : Text"
+		},
+		"diagnostic": {
+			"Syntax": "diagnostic : Text"
+		},
+		"diagnosticBytes": {
+			"Syntax": "diagnosticBytes : Real"
+		},
+		"output": {
+			"Syntax": "output : Text"
+		},
+		"dataType": {
+			"Syntax": "dataType : Text"
+		},
+		"worker": {
+			"Syntax": "worker : 4D.SystemWorker"
+		},
+		"outputBytes": {
+			"Syntax": "outputBytes : Real"
+		},
+		"state": {
+			"Syntax": "state : Object"
+		},
+		"hideWindow": {
+			"Syntax": "hideWindow : Boolean"
+		},
+		"currentDirectory": {
+			"Syntax": "currentDirectory : 4D.Folder"
+		},
+		"encoding": {
+			"Syntax": "encoding : Text"
+		},
+		"timeout": {
+			"Syntax": "timeout : Integer"
+		},
+		"configuration": {
+			"Syntax": "configuration : Object"
+		}
+	},
+	"Task": {
+		"takeAuthorizationURL()": {
+			"Syntax": "**.takeAuthorizationURL**()->url : Text",
+			"Params": [
+				[
+					"url",
+					"Text",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"result()": {
+			"Syntax": "**.result**()->result : Object",
+			"Params": [
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"dispose()": {
+			"Syntax": "**.dispose**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"cancel()": {
+			"Syntax": "**.cancel**()",
+			"Params": [],
+			"Summary": ""
+		},
+		"get done()": {
+			"Syntax": "**.get done**()->done : Boolean",
+			"Params": [
+				[
+					"done",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"Client": {
+		"get compiled()": {
+			"Syntax": "**.get compiled**()->compiled : Boolean",
+			"Params": [
+				[
+					"compiled",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"version()": {
+			"Syntax": "**.version**()->task : cs.OpenID.Task",
+			"Params": [
+				[
+					"task",
+					"cs.OpenID.Task",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"authenticate()": {
+			"Syntax": "**.authenticate**()->task : cs.OpenID.Task",
+			"Params": [
+				[
+					"task",
+					"cs.OpenID.Task",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_CLI": {
+		"execute()": {
+			"Syntax": "**.execute**( *arguments* : Collection )->result : Object",
+			"Params": [
+				[
+					"arguments",
+					"Collection",
+					"->"
+				],
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"resolve()": {
+			"Syntax": "**.resolve**()->result : Object",
+			"Params": [
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"get compiled()": {
+			"Syntax": "**.get compiled**()->compiled : Boolean",
+			"Params": [
+				[
+					"compiled",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"target": {
+			"Syntax": "target : Text"
+		},
+		"executableName": {
+			"Syntax": "executableName : Text"
+		}
+	},
+	"_Text": {
+		"includes()": {
+			"Syntax": "**.includes**( *values* : Collection; *text* : Text )->found : Boolean",
+			"Params": [
+				[
+					"values",
+					"Collection",
+					"->"
+				],
+				[
+					"text",
+					"Text",
+					"->"
+				],
+				[
+					"found",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"equal()": {
+			"Syntax": "**.equal**( *left* : Text; *right* : Text )->equal : Boolean",
+			"Params": [
+				[
+					"left",
+					"Text",
+					"->"
+				],
+				[
+					"right",
+					"Text",
+					"->"
+				],
+				[
+					"equal",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_Process": {
+		"execute()": {
+			"Syntax": "**.execute**( *file* : 4D.File; *arguments* : Collection )->result : Object",
+			"Params": [
+				[
+					"file",
+					"4D.File",
+					"->"
+				],
+				[
+					"arguments",
+					"Collection",
+					"->"
+				],
+				[
+					"result",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"quote()": {
+			"Syntax": "**.quote**( *argument* : Text )->quoted : Text",
+			"Params": [
+				[
+					"argument",
+					"Text",
+					"->"
+				],
+				[
+					"quoted",
+					"Text",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	},
+	"_Owner": {
+		"alive()": {
+			"Syntax": "**.alive**( *original* : Object )->alive : Boolean",
+			"Params": [
+				[
+					"original",
+					"Object",
+					"->"
+				],
+				[
+					"alive",
+					"Boolean",
+					"<-"
+				]
+			],
+			"Summary": ""
+		},
+		"info()": {
+			"Syntax": "**.info**( *number* : Integer )->owner : Object",
+			"Params": [
+				[
+					"number",
+					"Integer",
+					"->"
+				],
+				[
+					"owner",
+					"Object",
+					"<-"
+				]
+			],
+			"Summary": ""
+		}
+	}
+}

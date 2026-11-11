@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "feature": {
+    "casesPath": "/cases",
+    "caseCount": 1,
+    "caseAssertions": [
+      {"path": "/value", "equals": {"ok": true, "identity": {"issuer": "https://issuer.example", "subject": "opaque-subject"}}}
+    ],
+    "assertions": [
+      {"path": "/nativeVersion/ok", "equals": true},
+      {"path": "/nativeVersion/version", "matches": "[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.\\-]+)?"},
+      {"path": "/unicodeIdentity/identity/subject", "equals": "日本語"},
+      {"path": "/invalidOwnerRejected", "equals": true},
+      {"path": "/invalidConfigurations", "length": 6, "each": [
+        {"path": "/ok", "equals": false},
+        {"path": "/error/code", "equals": "invalid_configuration"}
+      ]},
+      {"path": "/invalidProtocols", "length": 8, "each": [
+        {"path": "/ok", "equals": false},
+        {"path": "/stdout", "absent": true}
+      ]},
+      {"path": "/jsonValid", "length": 4, "each": [{"path": "", "equals": true}]},
+      {"path": "/jsonInvalid", "length": 9, "each": [{"path": "", "equals": false}]},
+      {"path": "/malformedSensitive/error/code", "equals": "invalid_protocol"},
+      {"path": "/issuerCaseMismatch/error/code", "equals": "invalid_protocol"},
+      {"path": "/configurationCaseMismatch/error/code", "equals": "invalid_configuration"},
+      {"path": "/configuration/value/protocol_version", "equals": 1},
+      {"path": "/configuration/value/timeout_seconds", "equals": 180},
+      {"path": "/configuration/value/http_timeout_seconds", "equals": 15},
+      {"path": "/configuration/value/listen_address", "equals": "127.0.0.1:0"},
+      {"path": "/configuration/value/callback_path", "equals": "/callback"},
+      {"path": "/configuration/value/scopes", "equals": ["openid"]},
+      {"path": "/configuration/value/include_tokens", "equals": false},
+      {"path": "/exitMismatch/error/code", "equals": "exit_mismatch"},
+      {"path": "/nonzero/error/code", "equals": "invalid_input"},
+      {"path": "/nonzero/exitCode", "equals": 2},
+      {"path": "/tokenRejection/error/code", "equals": "unexpected_tokens"},
+      {"path": "/tokenOptInVerified", "equals": true},
+      {"path": "/tokenOptIn", "absent": true},
+      {"path": "/sanitizedFailure/error/code", "equals": "oauth_error"},
+      {"path": "/sanitizedFailure/error/message", "equals": "OIDC request failed; no credential-bearing diagnostics are retained"},
+      {"path": "/stdoutAtLimit", "equals": true},
+      {"path": "/stdoutOverflow", "equals": true},
+      {"path": "/stderrAtLimit", "equals": true},
+      {"path": "/stderrOverflow", "equals": true},
+      {"path": "/oversizeProtocol/error/code", "equals": "invalid_protocol"},
+      {"path": "/callerDeadline/error/code", "equals": "caller_timeout"},
+      {"path": "/finalGateCancellation/error/code", "equals": "cancelled"},
+      {"path": "/abnormalExit/error/code", "equals": "process_terminated"},
+      {"path": "/asyncDesktopStatus", "matches": "passed|not_run"}
+    ]
+  },
+  "execution": {
+    "successPaths": ["/renamedExecutable"],
+    "assertions": [
+      {"path": "/unsupported/error/code", "equals": "unsupported_architecture"},
+      {"path": "/missing/error/code", "equals": "missing_executable"},
+      {"path": "/missing/exitCode", "absent": true},
+      {"path": "/launch/error/code", "equals": "launch_failed"},
+      {"path": "/rejectedArguments", "length": 9, "each": [
+        {"path": "/error/code", "equals": "invalid_argument"}
+      ]},
+      {"path": "/rejectedNul", "length": 3, "each": [
+        {"path": "/error/code", "equals": "invalid_argument"}
+      ]},
+      {"path": "/missingFile/error/code", "equals": "invalid_argument"},
+      {"path": "/missingArguments/error/code", "equals": "invalid_argument"}
+    ]
+  },
+  "desktop": {
+    "assertions": [
+      {"path": "/version/ok", "equals": true},
+      {"path": "/ownerSnapshotVerified", "equals": true},
+      {"path": "/cancelled/error/code", "equals": "cancelled"},
+      {"path": "/disposed/error/code", "equals": "disposed"},
+      {"path": "/activeCancellation/error/code", "equals": "cancelled"},
+      {"path": "/activeProcessObserved", "equals": true},
+      {"path": "/cliTimeout/error/code", "equals": "timeout"},
+      {"path": "/ownerGone/error/code", "equals": "owner_gone"},
+      {"path": "/leakedWorkers", "equals": 0}
+    ]
+  }
+}

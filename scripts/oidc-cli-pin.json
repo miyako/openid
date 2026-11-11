@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "profile": "external-oidc-cli-v1",
+  "repository": "miyako/oidc-cli",
+  "status": "unresolved",
+  "reason": "No reviewed immutable signed release with license redistribution evidence is available. v0.1.0 and v0.1.0-rc.2 are not approved.",
+  "release": null
+}

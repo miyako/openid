@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "profile": "external-oidc-cli-v1",
+  "version_source": "scripts/oidc-cli-pin.json#/release/version",
+  "cases": [
+    {
+      "args": ["version"],
+      "exitCode": 0,
+      "stdout": {"protocol_version": 1, "ok": true, "version": "$UPSTREAM_VERSION"},
+      "stderr": ""
+    },
+    {
+      "args": ["authenticate"],
+      "stdin": "{}",
+      "exitCode": 2,
+      "stdout": {
+        "protocol_version": 1,
+        "ok": false,
+        "error": {"code": "invalid_input", "message": "protocol_version must be 1"}
+      },
+      "stderr": ""
+    }
+  ]
+}
