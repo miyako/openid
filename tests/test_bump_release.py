@@ -24,6 +24,7 @@ class BumpReleaseTests(unittest.TestCase):
             shutil.copy2(ROOT / file, self.root / file)
         for args in (("init", "-q"), ("remote", "add", "origin", "https://github.com/miyako/openid.git")):
             subprocess.run(["git", *args], cwd=self.root, check=True, capture_output=True)
+        bump_release.apply(self.root, "0.1.0", "miyako/openid")
 
     def test_component_only_bump_and_retry(self):
         pin = (self.root / "scripts/oidc-cli-pin.json").read_bytes()
@@ -42,8 +43,12 @@ class BumpReleaseTests(unittest.TestCase):
                 self.assertEqual(result["version"], expected)
 
     def test_no_stable_tag_bumps_configured_version(self):
-        self.assertEqual(bump_release.next_version(self.root, "patch", "miyako/openid",
-                                                 tags=[])["version"], "0.1.1")
+        for configured, expected in (("0.1.0", "0.1.1"), ("0.1.1", "0.1.2"),
+                                     ("1.2.9", "1.2.10")):
+            with self.subTest(configured=configured):
+                bump_release.apply(self.root, configured, "miyako/openid")
+                self.assertEqual(bump_release.next_version(self.root, "patch", "miyako/openid",
+                                                         tags=[])["version"], expected)
 
     def test_invalid_component_versions_and_identity_fail_without_mutation(self):
         before = (self.root / "template.json").read_bytes()
