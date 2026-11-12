@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "initialized": true,
+  "repository": "openid",
+  "namespace": "OpenID",
+  "cli": "oidc-cli",
+  "language": "go",
+  "cli_source": "external-oidc-cli-v1",
+  "feature": "Asynchronous desktop OpenID Connect through independently maintained oidc-cli",
+  "version": "0.1.0",
+  "feature_class": "Client"
+}

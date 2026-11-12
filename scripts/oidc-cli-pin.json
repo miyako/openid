@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "profile": "external-oidc-cli-v1",
+  "repository": "miyako/oidc-cli",
+  "status": "reviewed",
+  "reason": "v0.1.1 integrity, Developer ID, notarization and native version verified; owner-authorized MIT grant explicitly covers existing release binaries, with pinned complete dependency/runtime notices.",
+  "release": {
+    "version": "0.1.1",
+    "tag": "v0.1.1",
+    "source_commit": "1c909c00e6aa4924c4755e325f8ba8bb25927b31",
+    "licensing_commit": "847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc",
+    "apple_team_id": "Y69CWUC25B",
+    "verification_policy": {
+      "macos-x64": "native-intel-accepted-receipt-v1",
+      "macos-arm64": "native-arm64-online-notarized-v1",
+      "windows-x64": "native-windows-integrity-v1"
+    },
+    "receipt_sha256": "717fc3c3040174d3635170d57ea82b1a955c33df482db5402aba744fd1a62b3e",
+    "assets": {
+      "macos": {
+        "name": "oidc-cli_0.1.1_darwin_universal.tar.gz",
+        "sha256": "c684fe13472917abb822b0e7575a039b836ea95c67b189d18e656bef3149307b",
+        "binary_sha256": "6f2f1630e1b0958667350c208a26d179e1f5e7d99ce9525e341a63c91d814a07"
+      },
+      "windows-x64": {
+        "name": "oidc-cli_0.1.1_windows_amd64.zip",
+        "sha256": "5733eab84f1d2925d29145d50ee4ac57248fa63a5bfe6eac2834514f5c746c0c",
+        "binary_sha256": "ce57e4c943c9c7e1b3f3ac193d9c4d643a567b6071560ef85ebcfe9a8fb6c448"
+      }
+    },
+    "licenses": [
+      {
+        "kind": "upstream",
+        "path": "scripts/licenses/OIDC-CLI-LICENSE.txt",
+        "sha256": "74110a72fb9d7bb20f4520b106efc35842d75ab5c6d6c1d73574e55790547245",
+        "source": "https://raw.githubusercontent.com/miyako/oidc-cli/847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc/LICENSE"
+      },
+      {
+        "kind": "upstream",
+        "path": "scripts/licenses/OIDC-CLI-RELEASE-GRANT.txt",
+        "sha256": "8e245f633e262eaf1f3897cd546617808e5f6722061b2c2e0a54f7c064975c6a",
+        "source": "https://raw.githubusercontent.com/miyako/oidc-cli/847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc/docs/license-grant.md"
+      },
+      {
+        "kind": "dependencies",
+        "path": "scripts/licenses/OIDC-CLI-THIRD-PARTY-NOTICES.txt",
+        "sha256": "325942091008d773190bb9ad96bf9a3ab8d803ec86570a30d8c5b87235f136b0",
+        "source": "https://raw.githubusercontent.com/miyako/oidc-cli/847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc/THIRD_PARTY_NOTICES.txt"
+      },
+      {
+        "kind": "dependencies",
+        "path": "scripts/licenses/OIDC-CLI-NOTICE-MANIFEST.json",
+        "sha256": "c9c7e86063da1656022b734db31ab5fcee4d05048316c13c897d11aede366391",
+        "source": "https://raw.githubusercontent.com/miyako/oidc-cli/847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc/third_party/manifest.json"
+      },
+      {
+        "kind": "dependencies",
+        "path": "scripts/licenses/OIDC-CLI-LICENSING-SCOPE.txt",
+        "sha256": "98b42fe6b39af360930d3eb1b6433ac138cc6e8dd62252afe286808f7b5b21ae",
+        "source": "https://raw.githubusercontent.com/miyako/oidc-cli/847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc/docs/licensing.md"
+      },
+      {
+        "kind": "runtime",
+        "path": "scripts/licenses/OIDC-CLI-Go-LICENSE.txt",
+        "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+        "source": "https://raw.githubusercontent.com/golang/go/go1.26.10/LICENSE"
+      }
+    ]
+  }
+}
