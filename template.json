@@ -7,6 +7,6 @@
   "language": "go",
   "cli_source": "external-oidc-cli-v1",
   "feature": "Asynchronous desktop OpenID Connect through independently maintained oidc-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "feature_class": "Client"
 }
