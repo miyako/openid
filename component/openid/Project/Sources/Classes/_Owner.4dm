@@ -6,7 +6,7 @@ Function info($number : Integer)->$owner : Object
 	End if
 	$state:=Does not exist
 	$id:=0
-	PROCESS PROPERTIES($number; $name; $state; $ticks; $mode; $id)
+	PROCESS PROPERTIES:C336($number; $name; $state; $ticks; $mode; $id)
 	If (($state<0) | ($id<1))
 		return Null
 	End if

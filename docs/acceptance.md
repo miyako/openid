@@ -147,6 +147,19 @@ python3 scripts/test_4d.py --root . --tool4d .tools/tool4d.app/Contents/MacOS/to
 Production acquisition/publication cannot consume the development-only package.
 See [external adapter](../scripts/EXTERNAL_CLI.md) for precise pin/provenance gates.
 
+### tool4d 21 and real Auth0 desktop check
+
+4D 21 renamed `PROCESS PROPERTIES` to `_O_PROCESS PROPERTIES` (deprecated in
+20 R7), so the plain name failed to tokenize under tool4d 21. `_Owner` now uses
+the command-number token `PROCESS PROPERTIES:C336`, which stays compatible
+with 20.7. On macOS ARM64, tool4d **21.0 build 21.100301** compiled the
+component (only a 551.1 deprecation warning) and ran the component project
+directly (tool4d does not load components as dependencies) with CLI v0.1.1
+against a real Auth0 tenant: `version` returned 0.1.1, and `authenticate`
+returned ok with an issuer and subject identity. The task returned
+immediately and finished asynchronously. MFA, native Intel/Windows 4D,
+Dependency Manager installation and 4D Client/Server login were not tested.
+
 ## Normal desktop/manual acceptance still required
 
 With an already installed, licensed normal 4D desktop host, run the same source
