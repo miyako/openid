@@ -41,7 +41,7 @@ class WrapperContractTests(unittest.TestCase):
 
     def test_owner_identity_and_shared_results_use_runtime_validated_apis(self):
         source = (CLASSES / "_Owner.4dm").read_text()
-        self.assertIn("PROCESS PROPERTIES(", source)
+        self.assertIn("PROCESS PROPERTIES:C336(", source)
         self.assertIn("$current.ID=$original.ID", source)
         self.assertNotIn("Get process activity", source)
         self.assertNotIn(".split(", (CLASSES / "_Config.4dm").read_text())
