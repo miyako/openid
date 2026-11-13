@@ -37,6 +37,7 @@ class WrapperContractTests(unittest.TestCase):
             "listen_address", "callback_path", "timeout_seconds",
             "http_timeout_seconds", "open_browser",
             "allow_insecure_loopback_http", "include_tokens", "parent_pid",
+            "success_html", "success_html_file", "failure_html", "failure_html_file",
         })
 
     def test_owner_identity_and_shared_results_use_runtime_validated_apis(self):

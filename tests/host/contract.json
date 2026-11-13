@@ -11,10 +11,13 @@
       {"path": "/nativeVersion/version", "matches": "[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.\\-]+)?"},
       {"path": "/unicodeIdentity/identity/subject", "equals": "日本語"},
       {"path": "/invalidOwnerRejected", "equals": true},
-      {"path": "/invalidConfigurations", "length": 6, "each": [
+      {"path": "/invalidConfigurations", "length": 9, "each": [
         {"path": "/ok", "equals": false},
         {"path": "/error/code", "equals": "invalid_configuration"}
       ]},
+      {"path": "/pageConfiguration/ok", "equals": true},
+      {"path": "/pageConfiguration/value/success_html", "equals": "<p>ok</p>"},
+      {"path": "/pageConfiguration/value/failure_html_file", "equals": "/tmp/failure.html"},
       {"path": "/invalidProtocols", "length": 8, "each": [
         {"path": "/ok", "equals": false},
         {"path": "/stdout", "absent": true}

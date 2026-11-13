@@ -16,7 +16,7 @@ Function validate($input : Object; $command : Text)->$result : Object
 
 Function _validate($input : Object; $command : Text)->$result : Object
 	var $config : Object
-	var $name; $scope; $issuer : Text
+	var $name; $scope; $issuer; $key; $inline; $path : Text
 	var $value : Variant
 	var $bytes : Blob
 	var $addressParts : Collection
@@ -31,7 +31,7 @@ Function _validate($input : Object; $command : Text)->$result : Object
 	End if
 	$config:=OB Copy($input)
 	For each ($name; OB Keys($config))
-		If (Not(cs._Text.new().includes(New collection("issuer"; "client_id"; "protocol_version"; "scopes"; "listen_address"; "callback_path"; "timeout_seconds"; "http_timeout_seconds"; "open_browser"; "allow_insecure_loopback_http"; "include_tokens"; "parent_pid"); $name)))
+		If (Not(cs._Text.new().includes(New collection("issuer"; "client_id"; "protocol_version"; "scopes"; "listen_address"; "callback_path"; "timeout_seconds"; "http_timeout_seconds"; "open_browser"; "allow_insecure_loopback_http"; "include_tokens"; "parent_pid"; "success_html"; "success_html_file"; "failure_html"; "failure_html_file"); $name)))
 			return This.failure()
 		End if
 	End for each
@@ -144,6 +144,38 @@ Function _validate($input : Object; $command : Text)->$result : Object
 	If ((Position("//"; $config.callback_path; *)>0) | (Position("/."; $config.callback_path; *)>0))
 		return This.failure()
 	End if
+	// Empty page values mean the CLI default; the CLI reads and validates page files itself.
+	For each ($name; New collection("success_html"; "failure_html"))
+		For each ($key; New collection($name; $name+"_file"))
+			If (OB Is defined($config; $key))
+				If (Value type($config[$key])#Is text)
+					return This.failure()
+				End if
+			End if
+		End for each
+		$inline:=""
+		$path:=""
+		If (OB Is defined($config; $name))
+			$inline:=$config[$name]
+		End if
+		If (OB Is defined($config; $name+"_file"))
+			$path:=$config[$name+"_file"]
+		End if
+		If ((Length($inline)>0) & (Length($path)>0))
+			return This.failure()
+		End if
+		If (Length($inline)>0)
+			CONVERT FROM TEXT($inline; "UTF-8"; $bytes)
+			If (BLOB size($bytes)>65536)
+				return This.failure()
+			End if
+		End if
+		If (Length($path)>0)
+			If (Not(Match regex("^(/|[A-Za-z]:[\\\\/]|\\\\\\\\)[^\\x00-\\x1f]*$"; $path)))
+				return This.failure()
+			End if
+		End if
+	End for each
 	CONVERT FROM TEXT(JSON Stringify($config); "UTF-8"; $bytes)
 	If (BLOB size($bytes)>65536)
 		return This.failure()

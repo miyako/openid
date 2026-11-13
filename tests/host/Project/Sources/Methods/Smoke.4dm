@@ -68,9 +68,10 @@ HOST_Phase:="configuration"
 $checked:=cs.OpenID._Config.new().validate($configuration; "authenticate")
 $report.configuration:=$checked
 $report.invalidConfigurations:=New collection
-For each ($invalid; New collection(New object; New object("issuer"; "http://example.com"; "client_id"; "public"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "client_secret"; "not-allowed"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "include_tokens"; "true"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "timeout_seconds"; True); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "scopes"; New collection("offline_access"))))
+For each ($invalid; New collection(New object; New object("issuer"; "http://example.com"; "client_id"; "public"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "client_secret"; "not-allowed"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "include_tokens"; "true"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "timeout_seconds"; True); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "scopes"; New collection("offline_access")); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "success_html"; "<p>ok</p>"; "success_html_file"; "/tmp/success.html"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "failure_html_file"; "relative/failure.html"); New object("issuer"; "https://issuer.example"; "client_id"; "public"; "failure_html"; True)))
 	$report.invalidConfigurations.push(cs.OpenID._Config.new().validate($invalid; "authenticate"))
 End for each
+$report.pageConfiguration:=cs.OpenID._Config.new().validate(New object("issuer"; "https://issuer.example"; "client_id"; "public"; "success_html"; "<p>ok</p>"; "success_html_file"; ""; "failure_html_file"; "/tmp/failure.html"); "authenticate")
 HOST_Phase:="invalid protocol"
 $report.invalidProtocols:=New collection
 For each ($text; New collection("not json\n"; "null\n"; "true\n"; "[]\n"; "{\"protocol_version\":true,\"ok\":true}\n"; "{\"protocol_version\":2,\"ok\":true}\n"; "{\"protocol_version\":1,\"ok\":true}\n"; "{\"protocol_version\":1,\"ok\":true}\n{}\n"))

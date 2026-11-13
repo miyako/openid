@@ -6,10 +6,10 @@ Namespace **OpenID**, public classes **Client** and **Task**. No NetKit, native
 4D plug-in, embedded OIDC implementation, client secret, token cache, refresh
 persistence or provider logout.
 
-**Development candidate, not release-ready.** Published CLI **v0.1.1** is
+**Development candidate, not release-ready.** Published CLI **v0.2.0** is
 pinned with verified archive hashes, Developer ID, notarization and native
-version. The owner's explicit **MIT grant covers the existing v0.1.1 binaries**;
-complete [redistribution notices](docs/redistribution.md) are pinned and bundled.
+version. Its release source is MIT licensed, with the owner's grant and
+complete [redistribution notices](docs/redistribution.md) pinned and bundled.
 Existing unsigned `v0.1.0` / `v0.1.0-rc.2` assets remain unacceptable. No runtime
 download, PATH lookup, quarantine removal or unsigned fallback is performed.
 
@@ -60,6 +60,15 @@ Select `"Windows-x64"` explicitly on Windows. Windows ARM64 is unsupported.
 macOS resources contain a signed universal executable; do not lipo or re-sign it.
 The temporary `macOS-arm64` selector is not supported; use `macOS-universal`
 or its macOS default.
+Optional `success_html`/`failure_html` (inline UTF-8, at most 64 KiB) or
+`success_html_file`/`failure_html_file` (absolute native path) customize the
+browser page shown after the callback. CLI v0.2.0 sends that page only after
+token exchange and ID-token verification finish, so success means a verified
+identity. Pages are static and served under a strict CSP (no scripts, forms or
+external resources); the default is a plain "Authentication succeeded/failed.
+You may close this window." message. The page is display only: always use
+`Task.result()`.
+
 See [Client](component/openid/Documentation/Classes/Client.md) and
 [Task](component/openid/Documentation/Classes/Task.md).
 

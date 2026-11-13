@@ -31,17 +31,18 @@ round-trip checks remain independent of OIDC identity decoding.
 
 ## Reviewed production dependency
 
-`scripts/oidc-cli-pin.json` enables exact **v0.1.1** asset acquisition with
+`scripts/oidc-cli-pin.json` enables exact **v0.2.0** asset acquisition with
 `status:reviewed`. Its archives, Developer ID, hardened runtime, timestamp,
 both slices, online notarization and native `version` have passed independent
-verification on ARM64. The owner authorized MIT licensing, explicitly covering the
-existing release source and binaries, at separate licensing commit
-`847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc`. All five upstream licensing
+verification on ARM64. The v0.2.0 source commit
+`e687010b6ea3c51c6d3cf247d78f78826e188d17` itself carries the MIT license,
+owner grant and notices (byte-identical to the earlier v0.1.1 licensing commit
+`847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc`). All five upstream licensing
 documents plus the Go baseline notice are vendored byte-for-byte, hash-pinned
 and required in the assembled/packaged component. The combined notice bundle
 covers both dependencies and the Go runtime, including PATENTS and embedded
 third-party licenses. See [redistribution provenance](../docs/redistribution.md)
-and [v0.1.1 evidence](../docs/acceptance.md#published-v011-asset-review).
+and [v0.2.0 evidence](../docs/acceptance.md#published-v020-asset-review).
 Neither unsigned `v0.1.0` nor `v0.1.0-rc.2` is approved. A release must have a reviewed exact
 `miyako/oidc-cli` tag/version, universal macOS and unsigned Windows x64 archive
 names, archive and executable SHA256 values, `APPLE_NOTARIZATION.json` SHA256,
@@ -203,6 +204,6 @@ Changed/staged resources require recompilation; no marker is rewritten.
 The package is macOS-only, excludes Windows executables, contains a conspicuous
 `DEVELOPMENT_ONLY.json` with `release_eligible:false`, and does not enter `dist/`
 or emit release acceptance/provenance. This historical CI artifact remains
-nonrelease; approval of the separately published v0.1.1 pin does not promote it.
+nonrelease; approval of the separately published v0.1.1/v0.2.0 pins does not promote it.
 This exception is not available in CI/Publish entry points and does not alter
 production pin, packaging or publication gates.

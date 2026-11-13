@@ -172,6 +172,36 @@ Repeat on native Intel macOS and Windows x64; do not infer those results from
 the ARM64 headless run. No normal desktop installation/activation is authorized
 or performed by these instructions.
 
+## Published v0.2.0 asset review
+
+[`v0.2.0`](https://github.com/miyako/oidc-cli/releases/tag/v0.2.0) points to
+source commit `e687010b6ea3c51c6d3cf247d78f78826e188d17`. All five archives and
+the receipt passed `SHA256SUMS` and match the release API digests. The
+universal archive contains only the root regular executable `oidc-cli` (mode
+0755); the Windows ZIP contains only `oidc-cli.exe`. The universal executable
+SHA256 matches the `Accepted` receipt (submission
+`bb9b3378-558e-441d-8790-be4633d43319`) and passed strict all-architecture
+Developer ID (team `Y69CWUC25B`), hardened runtime, timestamp and online
+notarization checks. Native ARM64 `version` returned protocol1, `ok:true`,
+version `0.2.0`. `go version -m` reports go1.26.10, `CGO_ENABLED=0`, go-oidc
+v3.21.0, go-jose v4.1.9 and oauth2 v0.38.0, unchanged from v0.1.1. The license,
+grant and notice files at the source commit are byte-identical to the pinned
+copies, so every notice SHA256 is unchanged.
+
+Local results on macOS ARM64 with the pinned tool4d 20.7 build 20.101905:
+
+- passed: `check-pin`, ARM64 production acquisition and the full Python suite.
+- passed: the source host contract with `--require-desktop` against the staged v0.2.0
+  executable (`nativeVersion` 0.2.0, `asyncDesktopStatus:"passed"`, zero
+  leaked workers). This included the new result-page configuration cases.
+- passed: actual `Compile project` for both targets.
+- passed: the native CLI rejected inline and file pages set together, and a
+  relative page path, with `invalid_input` exit 2. The new `cli-contract.json`
+  case covers the first.
+- not run: native Windows and Intel acquisition, full three-target assembly,
+  the exact packed compiled-host contract, and a real browser/provider login
+  that renders a custom page.
+
 ## Published v0.1.1 asset review
 
 The user-requested release
@@ -191,9 +221,10 @@ This initial asset-only review inspected Windows archive/hash/shape without
 executing it. Current CI results above separately establish native Windows
 CLI version/timeout, not Authenticode signing or native Windows 4D.
 
-Exact selected archive/binary/receipt hashes are recorded in
-[`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json).
-Its status is now `reviewed`, with MIT license/grant and all required notices
+Exact selected archive/binary/receipt hashes were recorded in
+[`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json) (now superseded by
+the v0.2.0 pin above).
+Its status was `reviewed`, with MIT license/grant and all required notices
 from licensing commit `847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc` pinned
 separately from the older binary/source release. See
 [redistribution provenance](redistribution.md).
