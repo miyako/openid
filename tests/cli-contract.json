@@ -19,6 +19,17 @@
         "error": {"code": "invalid_input", "message": "protocol_version must be 1"}
       },
       "stderr": ""
+    },
+    {
+      "args": ["authenticate"],
+      "stdin": "{\"protocol_version\":1,\"issuer\":\"https://issuer.example\",\"client_id\":\"public\",\"success_html\":\"<p>ok</p>\",\"success_html_file\":\"/tmp/success.html\"}",
+      "exitCode": 2,
+      "stdout": {
+        "protocol_version": 1,
+        "ok": false,
+        "error": {"code": "invalid_input", "message": "success_html and success_html_file are mutually exclusive"}
+      },
+      "stderr": ""
     }
   ]
 }

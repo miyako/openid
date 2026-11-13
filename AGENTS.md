@@ -29,8 +29,8 @@ deliberate external pinned-asset adapter.** Do not run initialize/rename again.
   caller override or translated-process Intel evidence is allowed.
   Bind the declared tier to pin/provenance/acceptance metadata and document the
   weaker Intel guarantee. See `docs/verification-policy.md`.
-- Published v0.1.1 signing/integrity and the owner's explicit MIT grant are
-  reviewed. Its exact pin includes separate immutable licensing provenance
+- Published v0.2.0 signing/integrity, its MIT source license and the owner's
+  explicit grant are reviewed. Its exact pin includes separate immutable licensing provenance
   and complete dependency/runtime notices; preserve all of them when bundling.
   Approved CI-artifact development acceptance is separate, never release eligible.
 - No local secret access, Keychain operations or uploads. The user owns setup.

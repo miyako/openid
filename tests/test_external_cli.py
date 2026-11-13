@@ -111,12 +111,12 @@ class ExternalTests(unittest.TestCase):
         release = cli.load_pin(ROOT)
         self.assertEqual(release["verification_policy"], cli.VERIFICATION_POLICIES)
         self.assertEqual(release["assets"]["macos"], {
-            "name": "oidc-cli_0.1.1_darwin_universal.tar.gz",
-            "sha256": "c684fe13472917abb822b0e7575a039b836ea95c67b189d18e656bef3149307b",
-            "binary_sha256": "6f2f1630e1b0958667350c208a26d179e1f5e7d99ce9525e341a63c91d814a07"})
+            "name": "oidc-cli_0.2.0_darwin_universal.tar.gz",
+            "sha256": "513c4f27378933700465ef38bd870a87833c8eb5ad2416cbc6345b25cdce362c",
+            "binary_sha256": "3feaf489dcf377b0afd2968d326ade088a8578a82c1811acfa13ce082747b8fb"})
         self.assertEqual(release["receipt_sha256"],
-                         "717fc3c3040174d3635170d57ea82b1a955c33df482db5402aba744fd1a62b3e")
-        self.assertEqual(release["licensing_commit"], "847a235a3cc02d82b4f3b432e5eb42c7cab5d3fc")
+                         "3b364cf4a4a1571b2d5b3fffa75259e72c68b8503c16a311fc1868e1a140f63f")
+        self.assertEqual(release["licensing_commit"], "e687010b6ea3c51c6d3cf247d78f78826e188d17")
         self.assertEqual(len(release["licenses"]), 6)
         for policy in (None, {}, {"macos-arm64": cli.VERIFICATION_POLICIES["macos-x64"]},
                        {**cli.VERIFICATION_POLICIES, "macos-arm64": cli.VERIFICATION_POLICIES["macos-x64"]},

@@ -27,7 +27,7 @@ team, runtime, timestamp or version failures still stop the build.
 Intel evidence must say that the online requirement was **not run by policy**,
 never that it passed. Assembly and release acceptance must preserve and verify
 that distinction. The CLI remains the separately maintained published
-`miyako/oidc-cli` v0.1.1 universal asset; it is not rebuilt, re-signed, thinned
+`miyako/oidc-cli` v0.2.0 universal asset; it is not rebuilt, re-signed, thinned
 or reassembled. Windows remains explicitly unsigned.
 
 ## Recorded policy and evidence

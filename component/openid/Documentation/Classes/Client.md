@@ -25,6 +25,25 @@ The wrapper accepts exactly the upstream protocol v1 fields:
 | `allow_insecure_loopback_http` | false; explicit numeric-loopback local test only |
 | `include_tokens` | false; explicit sensitive in-memory output opt-in |
 | `parent_pid` | Optional integer 0–2147483647; CLI OS-parent monitoring only |
+| `success_html` / `failure_html` | Unset or empty for the CLI default; inline static HTML, UTF-8 at most 65536 bytes |
+| `success_html_file` / `failure_html_file` | Unset or empty; absolute native path (`/…`, `C:\…` or UNC) to a nonempty regular UTF-8 file of at most 65536 bytes |
+
+Each inline page and its `_file` form are mutually exclusive. The wrapper checks
+types, exclusivity, inline size and absolute path syntax; the CLI reads the file
+once and rejects unreadable, empty, oversized, non-UTF-8 or non-regular files
+with `invalid_input` (exit 2) before opening the browser. A 4D `File` from a
+filesystem path such as `/RESOURCES/...` is not a native path: pass
+`Convert path system to POSIX($file.platformPath)` on macOS, `$file.platformPath`
+on Windows, or simply inline `$file.getText("UTF-8")`. Inline pages count toward
+the 65536-byte stdin configuration limit.
+
+CLI v0.2.0 holds the browser's callback response until code exchange and
+ID-token verification finish, then shows the success page only for a verified
+identity, otherwise the failure page. Without a custom page it shows plain text
+"Authentication succeeded/failed. You may close this window." Pages are static
+(`text/html; charset=utf-8` with a CSP allowing only inline styles and `data:`
+images); the CLI never inserts tokens, codes, identities or provider errors.
+The page is a display only: stdout/`Task.result()` remains authoritative.
 
 Unknown fields (including `client_secret`) and null/wrongly typed settings
 fail before launch. The wrapper intentionally restricts IPv6 spellings to

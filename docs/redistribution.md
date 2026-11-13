@@ -14,6 +14,12 @@ It expressly permits wrapper bundling of the release built from source commit
 binary-only archives contained these supplemental documents; fetch them from
 the licensing commit, not the v0.1.1 tag. No tag or signed asset was replaced.
 
+The current pin is **v0.2.0**, built from source commit
+[`e687010b6ea3c51c6d3cf247d78f78826e188d17`](https://github.com/miyako/oidc-cli/commit/e687010b6ea3c51c6d3cf247d78f78826e188d17).
+That commit contains the MIT `LICENSE`, grant and notice files byte-identical to
+the licensing commit above, so the pin records it as both source and licensing
+commit; every notice SHA256 is unchanged.
+
 ## Exact notices
 
 [`scripts/oidc-cli-pin.json`](../scripts/oidc-cli-pin.json) records each original
@@ -50,7 +56,7 @@ notice inventory:
 
 | Component | Version | Terms |
 | --- | --- | --- |
-| `github.com/miyako/oidc-cli` | v0.1.1, exact source and licensing commits above | MIT owner grant |
+| `github.com/miyako/oidc-cli` | v0.2.0, source/licensing commit above | MIT (LICENSE and owner grant) |
 | `github.com/coreos/go-oidc/v3` | v3.21.0 | Apache-2.0 and NOTICE |
 | `github.com/go-jose/go-jose/v4` | v4.1.9 | Apache-2.0; embedded JSON BSD terms |
 | `golang.org/x/oauth2` | v0.38.0 | BSD-3-Clause |
