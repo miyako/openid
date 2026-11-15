@@ -134,12 +134,16 @@ def assemble(root=ROOT):
             output = destination / ".." / "licenses" / Path(notice["path"]).name
             output.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(root / notice["path"], output)
+        from generate_icons import generate as copy_icons
+        copy_icons(root)  # logo.png/logo.svg from assets/ into the same Resources folder
         return destination
     subprocess.run(["lipo", "-create", str(inputs[0]), str(inputs[1]), "-output", str(mac)], check=True)
     subprocess.run(["lipo", str(mac), "-verify_arch", "x86_64", "arm64"], check=True)
     mac.chmod(0o755)
     shutil.copyfile(inputs[2], windows)
     windows.chmod(0o755)
+    from generate_icons import generate as copy_icons
+    copy_icons(root)  # logo.png/logo.svg from assets/ into the same Resources folder
     return destination
 
 

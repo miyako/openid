@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import stat
 import struct
@@ -99,8 +100,10 @@ class DeliveryTests(unittest.TestCase):
             source = ROOT / ("cli" if json.loads((ROOT / "template.json").read_text())["initialized"] else "cli-starters/" + language) / "licenses" / name
             # Synthetic delivery tests may select an unrelated language after initialization.
             (resources / "licenses" / name).write_bytes(source.read_bytes() if source.is_file() else b"synthetic runtime notice")
-        (resources / "logo.png").write_bytes(b"synthetic PNG fixture")
-        (resources / "logo.svg").write_text("<svg/>", encoding="utf-8")
+        # Resources already hold the asset logos, as after a real assemble, so compile hashes stay valid.
+        shutil.copytree(ROOT / "assets", self.root / "assets")
+        for logo in ("logo.png", "logo.svg"):
+            shutil.copyfile(ROOT / "assets" / logo, resources / logo)
         (resources / "en.lproj").mkdir()
         (resources / "en.lproj" / "syntaxEN.json").write_text("{}", encoding="utf-8")
         (self.root / "LICENSE").write_text("test license\n", encoding="utf-8")
@@ -162,6 +165,9 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(destination, self.mac.parent.parent)
         self.assertEqual(self.mac.stat().st_mode & 0o777, 0o755)
         self.assertEqual(self.windows.read_bytes(), inputs[2].read_bytes())
+        for logo in ("logo.png", "logo.svg"):
+            self.assertEqual((self.component / "Resources" / logo).read_bytes(),
+                             (ROOT / "assets" / logo).read_bytes())
 
     def test_all_languages_preserve_repository_release_asset_identity(self):
         for language in ("go", "rust", "cpp"):
