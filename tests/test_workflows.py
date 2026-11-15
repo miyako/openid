@@ -142,6 +142,7 @@ class WorkflowTests(unittest.TestCase):
             ("ci", lambda d: d["on"].update(push={"tags": ["*"]})),
             ("publish", lambda d: d["on"].update(push={"tags": ["*"]})),
             ("publish", lambda d: d["on"]["workflow_dispatch"]["inputs"]["mode"].update(options=["patch"])),
+            ("publish", lambda d: d["on"]["workflow_dispatch"]["inputs"].update(require_apple_signing={"type": "boolean"})),
             ("publish", lambda d: d["jobs"]["version"]["steps"][0].update({"if": "false"})),
             ("publish", lambda d: d["jobs"]["native"]["with"].update(source_sha="main")),
             ("publish", lambda d: d["jobs"]["native"]["with"].update(release_call=False)),
